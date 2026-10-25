@@ -8,7 +8,7 @@ It can also open Simulink `.slx` files directly, so models you built in the past
 
 ## Try it
 
-- **Online:** open the GitHub Pages link of this repository (see *Hosting* below).
+- **Online:** [senolgulgonul.github.io/simuwire](https://senolgulgonul.github.io/simuwire/)
 - **Offline:** download `index.html` and open it in any modern browser (Chrome, Edge, Firefox, Safari).
 
 Click **Examples** to load one of the built-in models. The same models are also in [`examples/`](examples/): basic system responses, a mass-spring-damper, the Van der Pol oscillator, sampling, and PID control of a first-order-plus-dead-time (FOPDT) process with Ziegler–Nichols and SIMC tuning. Press **Run**.
@@ -24,7 +24,7 @@ Click **Examples** to load one of the built-in models. The same models are also 
 - Detects algebraic loops and unconnected inputs, and highlights the block that caused an error
 - Light and dark mode, works on tablets and phones
 
-## Blocks in v1.0
+## Blocks
 
 | Category | Blocks |
 |---|---|
@@ -68,6 +68,10 @@ Drag a wire segment to move it, double-click a wire to return it to automatic ro
 1. Push this repository to GitHub.
 2. Go to **Settings → Pages**, choose **Deploy from a branch**, select `main` and `/ (root)`, and save.
 3. After a minute the app is live at `https://<your-username>.github.io/<repository-name>/`.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## Roadmap
 

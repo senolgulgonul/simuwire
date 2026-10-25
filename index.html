@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Simuwire v1.0 – block diagram simulator</title>
+<title>Simuwire v1.1 – block diagram simulator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
@@ -105,6 +105,8 @@ body.resizing{cursor:col-resize;user-select:none}
 .blk.sel .bname{fill:var(--sel)}
 .port{fill:none;stroke:var(--bstroke);stroke-width:1.2}
 .phit{fill:transparent;cursor:crosshair}
+.rh{fill:var(--canvas);stroke:var(--sel);stroke-width:1.4}
+.rh-nw,.rh-se{cursor:nwse-resize}.rh-ne,.rh-sw{cursor:nesw-resize}
 .blk:hover .phit{fill:var(--selbg);stroke:var(--sel);stroke-width:.8;stroke-opacity:.5}
 .blk .phit:hover{fill:var(--selbg);stroke:var(--sel);stroke-width:1.4;stroke-opacity:1}
 .tb[hidden]{display:none}
@@ -184,9 +186,9 @@ body.resizing{cursor:col-resize;user-select:none}
 <body>
 <div id="app">
   <header class="toolbar">
-    <div class="brand" aria-label="Simuwire v1.0">
+    <div class="brand" aria-label="Simuwire v1.1">
       <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="1.5" y="5" width="7" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 10h4" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.5l2.5 2.5-2.5 2.5z" fill="currentColor"/><rect x="14.5" y="5" width="4" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span>Simuwire</span><small class="ver">v1.0</small>
+      <span>Simuwire</span><small class="ver">v1.1</small>
     </div>
     <button class="tb only-narrow" id="btnLib" title="Block library"><svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.6"/></svg></button>
     <button class="tb" id="btnNew" title="New model"><svg viewBox="0 0 16 16"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M9.5 1.5v3h3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg><span class="lbl">New</span></button>
@@ -811,7 +813,11 @@ function render(){
       ports+=`<circle class="phit" data-port="out:${i}" data-bid="${b.id}" cx="${p.x+p.dir*5}" cy="${p.y}" r="7"/>`;}
     const lines=String(b.name).split('\n');
     const name=`<text class="bname" x="${b.w/2}" y="${b.h+14}">${lines.map((s,i)=>`<tspan x="${b.w/2}" dy="${i?13:0}">${esc(s)}</tspan>`).join('')}</text>`;
-    blocks+=`<g class="${cls.join(' ')}" data-id="${b.id}" transform="translate(${b.x},${b.y})">${blockGraphic(b)}${name}${ports}</g>`;
+    let handles='';
+    if(sel.size===1&&sel.has(b.id)){const hs=Math.min(10,Math.max(6,7/view.k)),o=hs/2;
+      for(const [c,hx,hy] of [['nw',0,0],['ne',b.w,0],['sw',0,b.h],['se',b.w,b.h]])
+        handles+=`<rect class="rh rh-${c}" data-rh="${c}" data-bid="${b.id}" x="${hx-o}" y="${hy-o}" width="${hs}" height="${hs}"/>`;}
+    blocks+=`<g class="${cls.join(' ')}" data-id="${b.id}" transform="translate(${b.x},${b.y})">${blockGraphic(b)}${name}${ports}${handles}</g>`;
   }
   LB.innerHTML=blocks;
   $('#empty').hidden=model.blocks.length>0;
@@ -857,6 +863,8 @@ svg.addEventListener('pointerdown',e=>{
   const w=toWorld(e.clientX,e.clientY);
   svg.setPointerCapture(e.pointerId);
   if(e.button===1){drag={mode:'pan',sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y,moved:true};svg.classList.add('panning');return;}
+  const rhEl=e.target.closest('[data-rh]');
+  if(rhEl){const b=getB(rhEl.dataset.bid);if(b){drag={mode:'resize',id:b.id,corner:rhEl.dataset.rh,start:w,orig:{x:b.x,y:b.y,w:b.w,h:b.h},moved:false};return;}}
   const portEl=e.target.closest('[data-port]');
   if(portEl){
     const [kind,i]=portEl.dataset.port.split(':');const bid=portEl.dataset.bid;
@@ -879,6 +887,18 @@ svg.addEventListener('pointerdown',e=>{
 svg.addEventListener('pointermove',e=>{
   if(!drag)return;
   const w=toWorld(e.clientX,e.clientY);
+  if(drag.mode==='resize'){
+    const b=getB(drag.id);if(!b)return;
+    if(!drag.moved){pushUndo();drag.moved=true;}
+    const o=drag.orig,c=drag.corner,dx=w.x-drag.start.x,dy=w.y-drag.start.y,MIN=b.type==='Sum'?18:16;
+    let l=o.x,r=o.x+o.w,t=o.y,btm=o.y+o.h;
+    if(c.includes('w'))l=Math.min(snap(o.x+dx),r-MIN);else r=Math.max(snap(o.x+o.w+dx),l+MIN);
+    if(c.includes('n'))t=Math.min(snap(o.y+dy),btm-MIN);else btm=Math.max(snap(o.y+o.h+dy),t+MIN);
+    if(b.type==='Sum'){const s=Math.max(r-l,btm-t);if(c.includes('w'))l=r-s;else r=l+s;if(c.includes('n'))t=btm-s;else btm=t+s;}
+    b.x=l;b.y=t;b.w=r-l;b.h=btm-t;render();
+    setStatus(`${b.name}: ${Math.round(b.w)} × ${Math.round(b.h)}`);
+    return;
+  }
   if(drag.mode==='move'){
     if(!drag.moved&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<3)return;
     if(!drag.moved){pushUndo();drag.moved=true;}
@@ -923,6 +943,7 @@ function highlightCand(c,kind){
 function endDrag(e){
   if(!drag)return;
   const w=toWorld(e.clientX,e.clientY);const d=drag;drag=null;svg.classList.remove('panning');TMP.innerHTML='';
+  if(d.mode==='resize'){if(d.moved){save();render();}return;}
   if(d.mode==='move'){
     if(d.moved){save();return;}
     const now=performance.now();
@@ -1137,15 +1158,15 @@ function openSettings(){
   }});
 }
 // Repository link shown in Help → About; leave empty to hide it.
-const REPO_URL='';
+const REPO_URL='https://github.com/senolgulgonul/simuwire';
 function openHelp(){
   const rows=[['Add a block','Drag it from the library onto the canvas, or click it.'],['Connect','Hover a block to see its ports, then drag from an output port to another block’s input. To feed one output to several blocks, drag from the output port again, or Ctrl+drag its existing line.'],['Route lines','Drag any line segment up, down, left or right to move it. Double-click a line to return it to automatic routing.'],['Save','Save writes the model to a .json file you can open later with Open. Changes are also kept automatically in this browser.'],
-    ['Parameters','Double-click a block (or select it and press Enter). For a Scope this opens the plot window.'],['Move and pan','Drag blocks to move them; drag empty space to pan; use the wheel to zoom.'],
+    ['Resize','Select a block and drag one of its corner handles.'],['Parameters','Double-click a block (or select it and press Enter). For a Scope this opens the plot window.'],['Move and pan','Drag blocks to move them; drag empty space to pan; use the wheel to zoom.'],
     ['Delete','Deletes the selected block or line.'],['Ctrl+I','Flips the selected block horizontally (for feedback paths).'],['Ctrl+T','Runs the simulation.'],['Ctrl+Z','Undo.'],['Ctrl+S','Saves the model to a file.'],['Space','Fits the model to the view.'],['Shift+click','Selects several blocks.']];
   dialog('Help and about',`<table class="keys">${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>
     <p class="hint" style="margin-top:12px">Your model is saved automatically in this browser. .slx files are read only; subsystems and unsupported blocks appear with a dashed outline.</p>
     <fieldset class="desc" style="margin:14px 0 0"><legend>About</legend>
-      <p><b style="color:var(--text)">Simuwire v1.0</b>, block diagram simulation in your browser.<br>Created by Şenol Gülgönül. Open source under the MIT License.${REPO_URL?`<br><a href="${esc(REPO_URL)}" target="_blank" rel="noopener">Source code and examples on GitHub</a>`:''}</p>
+      <p><b style="color:var(--text)">Simuwire v1.1</b>, block diagram simulation in your browser.<br>Created by Şenol Gülgönül. Open source under the MIT License.${REPO_URL?`<br><a href="${esc(REPO_URL)}" target="_blank" rel="noopener">Source code and examples on GitHub</a>`:''}</p>
       <p style="margin-top:6px;font-size:12px">Not affiliated with The MathWorks, Inc. MATLAB and Simulink are registered trademarks of The MathWorks, Inc.</p>
     </fieldset>`,{cancel:false});
 }
