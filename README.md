@@ -2,7 +2,7 @@
 
 **Block diagram simulation in your browser.** Build control loops by dragging blocks and wires, run them, and read the results on a scope. No installation, no license, no server: Simuwire is a single HTML file.
 
-It can also open Simulink `.slx` files directly, so models you built in the past keep running after your MATLAB license is gone.
+It can also open Simulink `.slx` and `.mdl` files directly, so models you built in the past keep running after your MATLAB license is gone.
 
 ![Simuwire running a PI control loop with dead time](docs/screenshot.png)
 
@@ -19,7 +19,7 @@ Click **Examples** to load one of the built-in models. The same models are also 
 - Fixed-step solvers: `ode4` (Runge–Kutta, default) and `ode1` (Euler), with automatic step selection
 - MATLAB-style parameters: numbers, vectors like `[T 1]`, expressions like `2*K`, and model variables defined once in Settings
 - Scope windows with multiple inputs, hover readout, and a black-and-white style that prints well
-- Opens Simulink `.slx` files: blocks, positions, connections, model workspace variables and stop time are read automatically
+- Opens Simulink `.slx` files (both the current and the older layout) and classic `.mdl` files: blocks, positions, connections, model workspace variables and stop time are read automatically
 - Saves models as `.json` files; the current model is also kept in the browser between sessions
 - Detects algebraic loops and unconnected inputs, and highlights the block that caused an error
 - Light and dark mode, works on tablets and phones
@@ -47,11 +47,11 @@ A PI controller (Kp = 1, Ki = 1) on the plant 1/(s+1) with a 1 s transport delay
 
 `tests/block_tests.js` checks every block against an analytic answer: 45 tests covering all 23 blocks, all PID variants, both solvers and the error checks (algebraic loops, undefined variables, improper transfer functions). To run it, open Simuwire, open the browser console (F12), paste the file and press Enter.
 
-## Importing `.slx` files
+## Importing Simulink models
 
-Use **Open** and pick an `.slx` file. Supported blocks are converted automatically; unsupported ones (for example subsystems or Stateflow charts) appear with a dashed outline so you can see what needs to be rebuilt. Variables stored in the model workspace are loaded into Settings; variables that lived only in the MATLAB base workspace are set to 1 and listed so you can enter their values.
+Use **Open** and pick an `.slx` or `.mdl` file. Both the current `.slx` layout and the older one (a single `blockdiagram.xml`), as well as classic text `.mdl` files, are supported. Supported blocks are converted automatically; unsupported ones (for example subsystems or Stateflow charts) appear with a dashed outline so you can see what needs to be rebuilt. Variables stored in the model workspace are loaded into Settings; variables that lived only in the MATLAB base workspace are set to 1 and listed so you can enter their values.
 
-`.slx` files are only read, never modified.
+Simulink files are only read, never modified. Variables in `.mdl` files and older `.slx` files are usually stored in the MATLAB base workspace rather than in the model, so they are listed with a value of 1 for you to fill in.
 
 ## Keyboard shortcuts
 

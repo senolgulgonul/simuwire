@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Simuwire v1.1.1 – block diagram simulator</title>
+<title>Simuwire v1.2 – block diagram simulator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
@@ -186,13 +186,13 @@ body.resizing{cursor:col-resize;user-select:none}
 <body>
 <div id="app">
   <header class="toolbar">
-    <div class="brand" aria-label="Simuwire v1.1.1">
+    <div class="brand" aria-label="Simuwire v1.2">
       <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="1.5" y="5" width="7" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 10h4" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.5l2.5 2.5-2.5 2.5z" fill="currentColor"/><rect x="14.5" y="5" width="4" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span>Simuwire</span><small class="ver">v1.1.1</small>
+      <span>Simuwire</span><small class="ver">v1.2</small>
     </div>
     <button class="tb only-narrow" id="btnLib" title="Block library"><svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.6"/></svg></button>
     <button class="tb" id="btnNew" title="New model"><svg viewBox="0 0 16 16"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M9.5 1.5v3h3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg><span class="lbl">New</span></button>
-    <button class="tb" id="btnOpen" title="Open a Simuwire model (.json) or a Simulink file (.slx)"><svg viewBox="0 0 16 16"><path d="M1.5 3.5h5l1.5 1.5h6.5v8.5h-13z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg><span class="lbl">Open</span></button>
+    <button class="tb" id="btnOpen" title="Open a Simuwire model (.json) or a Simulink model (.slx, .mdl)"><svg viewBox="0 0 16 16"><path d="M1.5 3.5h5l1.5 1.5h6.5v8.5h-13z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg><span class="lbl">Open</span></button>
     <button class="tb" id="btnSave" title="Save the model to a file (Ctrl+S)" hidden><svg viewBox="0 0 16 16"><path d="M2.5 2.5h9l2 2v9h-11z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M5 2.5v3.5h5V2.5M5 13.5v-4h6v4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg><span class="lbl">Save</span></button>
     <button class="tb" id="btnExample" title="Example models" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 16 16"><path d="M1.5 13.5c3 0 3-9 6.5-9s3.5 6 6.5 6" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="lbl">Examples</span><svg class="caret" viewBox="0 0 10 10"><path d="M1.5 3.5l3.5 3.5 3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
     <button class="tb" id="btnUndo" title="Undo (Ctrl+Z)"><svg viewBox="0 0 16 16"><path d="M5 3L2 6l3 3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 6h7a4 4 0 010 8H6" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="lbl">Undo</span></button>
@@ -206,7 +206,7 @@ body.resizing{cursor:col-resize;user-select:none}
     <button class="tb" id="btnZoomIn" title="Zoom in"><svg viewBox="0 0 16 16"><path d="M3 8h10M8 3v10" stroke="currentColor" stroke-width="1.6"/></svg></button>
     <button class="tb" id="btnFit" title="Fit model to view (Space)"><svg viewBox="0 0 16 16"><path d="M1.5 5V1.5H5M11 1.5h3.5V5M14.5 11v3.5H11M5 14.5H1.5V11" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="lbl">Fit</span></button>
     <button class="tb" id="btnHelp" title="Help and about"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M6 6.2a2 2 0 113 1.7c-.7.4-1 .8-1 1.6M8 11.3v.4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
-    <input type="file" id="fileIn" accept=".slx,.json" hidden>
+    <input type="file" id="fileIn" accept=".slx,.mdl,.json" hidden>
   </header>
 
   <div class="main">
@@ -1168,7 +1168,7 @@ function openHelp(){
   dialog('Help and about',`<table class="keys">${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>
     <p class="hint" style="margin-top:12px">Your model is saved automatically in this browser. .slx files are read only; subsystems and unsupported blocks appear with a dashed outline.</p>
     <fieldset class="desc" style="margin:14px 0 0"><legend>About</legend>
-      <p><b style="color:var(--text)">Simuwire v1.1.1</b>, block diagram simulation in your browser.<br>Created by Şenol Gülgönül. Open source under the MIT License.${REPO_URL?`<br><a href="${esc(REPO_URL)}" target="_blank" rel="noopener">Source code and examples on GitHub</a>`:''}</p>
+      <p><b style="color:var(--text)">Simuwire v1.2</b>, block diagram simulation in your browser.<br>Created by Şenol Gülgönül. Open source under the MIT License.${REPO_URL?`<br><a href="${esc(REPO_URL)}" target="_blank" rel="noopener">Source code and examples on GitHub</a>`:''}</p>
       <p style="margin-top:6px;font-size:12px">Not affiliated with The MathWorks, Inc. MATLAB and Simulink are registered trademarks of The MathWorks, Inc.</p>
     </fieldset>`,{cancel:false});
 }
@@ -1339,54 +1339,102 @@ function mapSlxBlock(bt,P){
   const pr=(P.Ports||'[]').replace(/[\[\]]/g,'').split(/[,\s]+/).filter(Boolean).map(Number);
   return{type:'Unknown',p:{BlockType:bt==='Reference'?(P.SourceType||P.SourceBlock||'Reference'):bt},ports:[pr[0]||0,Math.min(pr[1]||0,4)]};
 }
-async function importSlx(file){
-  if(typeof JSZip==='undefined')throw new Error('The ZIP reader didn’t load. Check your connection and reload the page.');
-  let zip;try{zip=await JSZip.loadAsync(file);}catch(e){throw new Error('Can’t read this file: it isn’t a valid .slx (ZIP) file.');}
-  const sf=zip.file('simulink/systems/system_root.xml');
-  if(!sf)throw new Error('No model definition found in this file (simulink/systems/system_root.xml). It may have been saved by a very old version.');
-  const doc=new DOMParser().parseFromString(await sf.async('string'),'application/xml');
-  const root=doc.documentElement;
+// Reads all three Simulink storage layouts:
+//  - .slx from recent releases: simulink/systems/system_root.xml, lines connected by block SID
+//  - .slx from older releases: whole diagram in simulink/blockdiagram.xml, lines connected by block name
+//  - .mdl text files: converted to the same XML shape first
+function buildFromSystem(root,vars,cfgText,fileName){
   const kids=(el,tag)=>Array.from(el.children).filter(c=>c.tagName===tag);
-  const pmap=el=>{const m={};for(const p of kids(el,'P'))m[p.getAttribute('Name')]=p.textContent;
-    for(const p of el.getElementsByTagName('P')){const k=p.getAttribute('Name');if(!(k in m))m[k]=p.textContent;}return m;};
-  const m=emptyModel();const sid=new Map();const unknown=[];
+  const directP=el=>{const m={};for(const p of kids(el,'P')){const k=p.getAttribute('Name');if(!(k in m))m[k]=p.textContent;}return m;};
+  const pmap=el=>{const m=directP(el);for(const p of el.getElementsByTagName('P')){const k=p.getAttribute('Name');if(!(k in m))m[k]=p.textContent;}return m;};
+  const m=emptyModel();const sid=new Map(),byName=new Map();const unknown=[];
   for(const el of kids(root,'Block')){
-    const bt=el.getAttribute('BlockType'),name=el.getAttribute('Name')||bt,P=pmap(el);
-    const pos=(P.Position||'[0, 0, 40, 40]').replace(/[\[\]]/g,'').split(/[,\s]+/).filter(Boolean).map(Number);
+    const P=pmap(el),D=directP(el);
+    const bt=el.getAttribute('BlockType')||D.BlockType||'Unknown',name=el.getAttribute('Name')||D.Name||bt;
+    const pos=(P.Position||'[0, 0, 40, 40]').replace(/[\[\]]/g,'').split(/[,;\s]+/).filter(Boolean).map(Number);
     const [l,t,r,bb]=pos;let w=Math.max(16,(r-l)||40),h=Math.max(16,(bb-t)||40);
     const mm=mapSlxBlock(bt,P);
-    if(mm.type==='Unknown')unknown.push(name);
-    const b={id:uid(),type:mm.type,name,x:l,y:t,w,h,p:mm.p,flip:P.BlockMirror==='on'||P.Orientation==='left'};
+    if(mm.type==='Unknown')unknown.push(name.replace(/\s+/g,' '));
+    const b={id:uid(),type:mm.type,name,x:l||0,y:t||0,w,h,p:mm.p,flip:P.BlockMirror==='on'||P.Orientation==='left'};
     if(mm.ports)b.ports=mm.ports;
     if(b.type==='Sum'){const d=Math.max(20,Math.min(w,h));b.w=b.h=d;}
-    m.blocks.push(b);sid.set(el.getAttribute('SID'),b.id);
+    m.blocks.push(b);const sv=el.getAttribute('SID')||D.SID;if(sv)sid.set(String(sv).trim(),b.id);byName.set(name,b.id);
   }
-  // unique names
   const seen=new Set();for(const b of m.blocks){let n=b.name,i=1;while(seen.has(n))n=b.name+'_'+(i++);b.name=n;seen.add(n);}
   const parseEnd=s=>{const r=/^\s*(\d+)#(in|out):(\d+)\s*$/.exec(s||'');return r?{sid:r[1],kind:r[2],port:+r[3]-1}:null;};
   let skipped=0;
+  const srcOf=P=>{
+    if(P.Src!=null){const r=parseEnd(P.Src);return r&&r.kind==='out'&&sid.has(r.sid)?{b:sid.get(r.sid),port:r.port}:null;}
+    if(P.SrcBlock!=null){const id=byName.get(P.SrcBlock),pt=parseInt(P.SrcPort,10);return id&&pt>0?{b:id,port:pt-1}:null;}
+    return null;};
+  const dstOf=P=>{
+    if(P.Dst!=null){const r=parseEnd(P.Dst);return r&&r.kind==='in'&&sid.has(r.sid)?{b:sid.get(r.sid),port:r.port}:undefined;}
+    if(P.DstBlock!=null){const id=byName.get(P.DstBlock),pt=parseInt(P.DstPort,10);return id&&pt>0?{b:id,port:pt-1}:undefined;}
+    return null;};
   for(const ln of kids(root,'Line')){
-    const srcP=kids(ln,'P').find(p=>p.getAttribute('Name')==='Src');const src=parseEnd(srcP&&srcP.textContent);
-    if(!src||!sid.has(src.sid)){skipped++;continue;}
-    for(const p of ln.getElementsByTagName('P')){if(p.getAttribute('Name')!=='Dst')continue;const d=parseEnd(p.textContent);
-      if(!d||!sid.has(d.sid)||d.kind!=='in'){skipped++;continue;}
-      m.lines.push({id:uid('l'),src:{b:sid.get(src.sid),port:src.port},dst:{b:sid.get(d.sid),port:d.port}});}
+    const src=srcOf(directP(ln));if(!src){skipped++;continue;}
+    for(const el of [ln,...ln.getElementsByTagName('Branch')]){
+      const d=dstOf(directP(el));if(d===null)continue;if(!d){skipped++;continue;}
+      m.lines.push({id:uid('l'),src:{...src},dst:d});}
   }
-  // variables: model workspace + names used but not found
-  let vars={};const mx=zip.file('simulink/modelWorkspace.mxarray');
-  if(mx){try{vars=parseMx(await mx.async('arraybuffer'));}catch(e){vars={};}}
   const used=new Set();
   for(const b of m.blocks){const d=BLOCKS[b.type];for(const f of d.fields||[]){if(f.opts||f.raw)continue;
     try{const toks=tokenize(String(b.p[f.k]??''));toks.forEach((tk,i)=>{if(tk.k==='id'&&!(tk.v in FUNCS&&toks[i+1]&&toks[i+1].v==='(')&&!(tk.v in CONSTS)&&!(f.expr&&(tk.v==='u'||tk.v==='t')))used.add(tk.v);});}catch(e){}}}
   const missing=[...used].filter(v=>!(v in vars));
   const fmt=v=>Array.isArray(v)?'['+v.map(x=>+x.toPrecision(12)).join(' ')+']':String(+(+v).toPrecision(12));
-  m.settings.ws=Object.entries(vars).map(([k,v])=>`${k} = ${fmt(v)};`).concat(missing.map(k=>`${k} = 1;   % value not found in the .slx, please check`)).join('\n');
-  const cfg=zip.file('simulink/configSet0.xml');
-  if(cfg){const x=await cfg.async('string');const st=/<P Name="StopTime"[^>]*>([^<]*)</.exec(x);if(st&&st[1].trim())m.settings.stop=st[1].trim();}
-  m.settings.name=String(file.name||'model').replace(/\.slx$/i,'');
-  // shift positions to the top-left
+  m.settings.ws=Object.entries(vars).map(([k,v])=>`${k} = ${fmt(v)};`).concat(missing.map(k=>`${k} = 1;   % value not found in the model file, please check`)).join('\n');
+  if(cfgText){const st=/<P Name="StopTime"[^>]*>([^<]*)</.exec(cfgText)||/^\s*StopTime\s+"([^"]*)"/m.exec(cfgText);if(st&&st[1].trim())m.settings.stop=st[1].trim();}
+  m.settings.name=String(fileName||'model').replace(/\.(slx|mdl)$/i,'');
   if(m.blocks.length){const mxn=Math.min(...m.blocks.map(b=>b.x)),myn=Math.min(...m.blocks.map(b=>b.y));for(const b of m.blocks){b.x+=40-mxn;b.y+=40-myn;}}
   return{model:m,unknown,missing,vars:Object.keys(vars),skipped};
+}
+const parseXml=t=>{const d=new DOMParser().parseFromString(t,'application/xml');if(d.getElementsByTagName('parsererror').length)throw new Error('The model XML inside this file could not be read.');return d;};
+async function importSlx(file){
+  if(typeof JSZip==='undefined')throw new Error('The ZIP reader didn’t load. Check your connection and reload the page.');
+  let zip;try{zip=await JSZip.loadAsync(file);}catch(e){throw new Error('Can’t read this file: it isn’t a valid .slx (ZIP) file.');}
+  let root,cfgText=null;
+  const sf=zip.file('simulink/systems/system_root.xml');
+  if(sf){root=parseXml(await sf.async('string')).documentElement;const cfg=zip.file('simulink/configSet0.xml');if(cfg)cfgText=await cfg.async('string');}
+  else{
+    const bd=zip.file('simulink/blockdiagram.xml');
+    if(!bd)throw new Error('No Simulink model was found inside this file. It may be a library or a protected model.');
+    const txt=await bd.async('string');root=parseXml(txt).getElementsByTagName('System')[0];cfgText=txt;
+    if(!root)throw new Error('This .slx file contains no block diagram.');
+  }
+  let vars={};const mx=zip.file('simulink/modelWorkspace.mxarray');
+  if(mx){try{vars=parseMx(await mx.async('arraybuffer'));}catch(e){vars={};}}
+  return buildFromSystem(root,vars,cfgText,file.name);
+}
+function mdlToXml(text){
+  const xe=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const unq=v=>{v=v.trim();if(!v.startsWith('"'))return v;let out='';const re=/"((?:[^"\\]|\\.)*)"/g;let mm;while((mm=re.exec(v)))out+=mm[1];
+    return out.replace(/\\n/g,'\n').replace(/\\t/g,'\t').replace(/\\"/g,'"').replace(/\\\\/g,'\\');};
+  const KEEP=new Set(['Model','System','Block','Line','Branch']);
+  const lines=text.split(/\r?\n/);const out=[],stack=[];let i=0;
+  while(i<lines.length){
+    const line=lines[i++].trim();
+    if(!line||line.startsWith('#'))continue;
+    if(line.startsWith('__MWOPC'))break;
+    if(line==='}'){if(stack.length)out.push(`</${stack.pop()}>`);continue;}
+    let m=/^([A-Za-z_]\w*)\s*\{$/.exec(line);
+    if(m){const tag=KEEP.has(m[1])?m[1]:'Sec';stack.push(tag);out.push(tag==='Sec'?`<Sec Name="${xe(m[1])}">`:`<${tag}>`);continue;}
+    m=/^([A-Za-z_]\w*)\s+([\s\S]*)$/.exec(line);if(!m)continue;
+    let val=m[2];
+    if(val.trim().startsWith('"'))while(i<lines.length&&/^\s*"/.test(lines[i]))val+=lines[i++].trim();
+    out.push(`<P Name="${xe(m[1])}">${xe(unq(val))}</P>`);
+  }
+  while(stack.length)out.push(`</${stack.pop()}>`);
+  return '<Root>'+out.join('')+'</Root>';
+}
+async function importMdl(file){
+  const text=await file.text();
+  // Newer .mdl files can carry the diagram as an embedded XML part
+  const part=/__MWOPC_PART_BEGIN__\s+\/simulink\/systems\/system_root\.xml\s*\r?\n([\s\S]*?)(?=\r?\n__MWOPC_)/.exec(text);
+  let root;
+  if(part)root=parseXml(part[1].trim()).documentElement;
+  else{const doc=parseXml(mdlToXml(text));root=doc.getElementsByTagName('System')[0];}
+  if(!root||!root.children.length)throw new Error('No block diagram was found in this .mdl file.');
+  return buildFromSystem(root,{},text,file.name);
 }
 async function openFile(file){
   if(!file)return;
@@ -1405,7 +1453,7 @@ async function openFile(file){
       setStatus(`Opened “${file.name}”: ${model.blocks.length} blocks, ${model.lines.length} connections.`,'ok');
       return;
     }
-    const r=await importSlx(file);
+    const r=/\.mdl$/i.test(file.name)?await importMdl(file):await importSlx(file);
     pushUndo();model=r.model;results=null;sel.clear();selLine=null;errIds=new Set(model.blocks.filter(b=>b.type==='Unknown').map(b=>b.id));
     for(const w of scopeWins.values())w.el.remove();scopeWins.clear();
     syncStop();save();render();fitView();
