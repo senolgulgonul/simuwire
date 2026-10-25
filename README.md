@@ -43,6 +43,10 @@ The PID Controller supports P, PI, PD, PID and I types, parallel and ideal forms
 
 A PI controller (Kp = 1, Ki = 1) on the plant 1/(s+1) with a 1 s transport delay was simulated in both Simulink and Simuwire. The responses match: a 1.5 peak at t ≈ 3 s, a dip to about 0.76 at t ≈ 5.3 s, and a value of 0.947 at t = 10 s. The `.slx` version of `examples/pid/pi_fopdt_with_and_without_dead_time.json` was also imported and checked against an independent Python simulation of the same loop.
 
+## Tests
+
+`tests/block_tests.js` checks every block against an analytic answer: 45 tests covering all 23 blocks, all PID variants, both solvers and the error checks (algebraic loops, undefined variables, improper transfer functions). To run it, open Simuwire, open the browser console (F12), paste the file and press Enter.
+
 ## Importing `.slx` files
 
 Use **Open** and pick an `.slx` file. Supported blocks are converted automatically; unsupported ones (for example subsystems or Stateflow charts) appear with a dashed outline so you can see what needs to be rebuilt. Variables stored in the model workspace are loaded into Settings; variables that lived only in the MATLAB base workspace are set to 1 and listed so you can enter their values.

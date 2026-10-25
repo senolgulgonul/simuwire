@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Simuwire v1.1 – block diagram simulator</title>
+<title>Simuwire v1.1.1 – block diagram simulator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
@@ -186,9 +186,9 @@ body.resizing{cursor:col-resize;user-select:none}
 <body>
 <div id="app">
   <header class="toolbar">
-    <div class="brand" aria-label="Simuwire v1.1">
+    <div class="brand" aria-label="Simuwire v1.1.1">
       <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="1.5" y="5" width="7" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 10h4" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.5l2.5 2.5-2.5 2.5z" fill="currentColor"/><rect x="14.5" y="5" width="4" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span>Simuwire</span><small class="ver">v1.1</small>
+      <span>Simuwire</span><small class="ver">v1.1.1</small>
     </div>
     <button class="tb only-narrow" id="btnLib" title="Block library"><svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.6"/></svg></button>
     <button class="tb" id="btnNew" title="New model"><svg viewBox="0 0 16 16"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M9.5 1.5v3h3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg><span class="lbl">New</span></button>
@@ -509,9 +509,11 @@ const BLOCKS={
   UnitDelay:{label:'Unit Delay',w:40,h:40,def:{InitialCondition:'0',SampleTime:'-1'},
     fields:[{k:'InitialCondition',l:'Initial condition'},{k:'SampleTime',l:'Sample time (−1: solver step)'}],
     desc:'Delays its input by one sample period: y[k] = u[k−1].',
-    nIn:()=>1,nOut:()=>1,init(s,E){s.st=E.num('InitialCondition');s.Ts=E.num('SampleTime');if(s.Ts>0)E.ts(s.Ts);s.has=false;},
-    finalize(s,h){if(!(s.Ts>0))s.Ts=h;},out:s=>s.st,
-    major(s,t,u){if(hit(t,s.Ts)){s.pend=u[0];s.has=true;}},post(s){if(s.has){s.st=s.pend;s.has=false;}},
+    nIn:()=>1,nOut:()=>1,init(s,E){s.st=E.num('InitialCondition');s.next=s.st;s.Ts=E.num('SampleTime');if(s.Ts>0)E.ts(s.Ts);},
+    finalize(s,h){if(!(s.Ts>0))s.Ts=h;},
+    // At each sample hit the output takes the input stored at the previous hit, then stores the current input.
+    out(s,t,u,X,major){if(major&&hit(t,s.Ts))s.st=s.next;return s.st;},
+    major(s,t,u){if(hit(t,s.Ts))s.next=u[0];},
     icon:b=>frac(b.w,b.h,'1','z')},
   ZOH:{label:'Zero-Order Hold',w:40,h:40,def:{SampleTime:'-1'},ft:true,
     fields:[{k:'SampleTime',l:'Sample time (−1: solver step)'}],desc:'Samples its input at each sample hit and holds it until the next one.',
@@ -1166,7 +1168,7 @@ function openHelp(){
   dialog('Help and about',`<table class="keys">${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>
     <p class="hint" style="margin-top:12px">Your model is saved automatically in this browser. .slx files are read only; subsystems and unsupported blocks appear with a dashed outline.</p>
     <fieldset class="desc" style="margin:14px 0 0"><legend>About</legend>
-      <p><b style="color:var(--text)">Simuwire v1.1</b>, block diagram simulation in your browser.<br>Created by Şenol Gülgönül. Open source under the MIT License.${REPO_URL?`<br><a href="${esc(REPO_URL)}" target="_blank" rel="noopener">Source code and examples on GitHub</a>`:''}</p>
+      <p><b style="color:var(--text)">Simuwire v1.1.1</b>, block diagram simulation in your browser.<br>Created by Şenol Gülgönül. Open source under the MIT License.${REPO_URL?`<br><a href="${esc(REPO_URL)}" target="_blank" rel="noopener">Source code and examples on GitHub</a>`:''}</p>
       <p style="margin-top:6px;font-size:12px">Not affiliated with The MathWorks, Inc. MATLAB and Simulink are registered trademarks of The MathWorks, Inc.</p>
     </fieldset>`,{cancel:false});
 }
