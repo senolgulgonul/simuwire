@@ -1,0 +1,629 @@
+{
+  "format": "simuwire",
+  "version": 1,
+  "model": {
+    "blocks": [
+      {
+        "id": "b1",
+        "type": "Scope",
+        "name": "Scope",
+        "x": 812.0,
+        "y": 190.0,
+        "w": 36,
+        "h": 120,
+        "p": {
+          "NumInputPorts": "4"
+        },
+        "flip": false
+      },
+      {
+        "id": "b2",
+        "type": "Step",
+        "name": "Setpoint",
+        "x": 30.0,
+        "y": 72.0,
+        "w": 40,
+        "h": 36,
+        "p": {
+          "Time": "1",
+          "Before": "0",
+          "After": "1"
+        },
+        "flip": false
+      },
+      {
+        "id": "b3",
+        "type": "Sum",
+        "name": "Sum",
+        "x": 117.0,
+        "y": 77.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "b4",
+        "type": "PID",
+        "name": "P (Ziegler-Nichols)",
+        "x": 180.0,
+        "y": 70.0,
+        "w": 120,
+        "h": 40,
+        "p": {
+          "Controller": "P",
+          "Form": "Parallel",
+          "P": "Kp_P",
+          "I": "1",
+          "D": "0",
+          "N": "100"
+        },
+        "flip": false
+      },
+      {
+        "id": "b5",
+        "type": "Step",
+        "name": "Disturbance",
+        "x": 296.0,
+        "y": 10.0,
+        "w": 40,
+        "h": 36,
+        "p": {
+          "Time": "td",
+          "Before": "0",
+          "After": "d"
+        },
+        "flip": false
+      },
+      {
+        "id": "b6",
+        "type": "Sum",
+        "name": "Plant input",
+        "x": 347.0,
+        "y": 77.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "++|"
+        },
+        "flip": false
+      },
+      {
+        "id": "b7",
+        "type": "TransferFcn",
+        "name": "Process",
+        "x": 435.0,
+        "y": 70.0,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Numerator": "[K]",
+          "Denominator": "[T 1]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b8",
+        "type": "TransportDelay",
+        "name": "Dead time (P)",
+        "x": 570.0,
+        "y": 70.0,
+        "w": 60,
+        "h": 40,
+        "p": {
+          "DelayTime": "L",
+          "InitialOutput": "0"
+        },
+        "flip": false
+      },
+      {
+        "id": "b18",
+        "type": "Step",
+        "name": "Setpoint2",
+        "x": 30.0,
+        "y": 232.0,
+        "w": 40,
+        "h": 36,
+        "p": {
+          "Time": "1",
+          "Before": "0",
+          "After": "1"
+        },
+        "flip": false
+      },
+      {
+        "id": "b19",
+        "type": "Sum",
+        "name": "Sum2",
+        "x": 117.0,
+        "y": 237.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "b20",
+        "type": "PID",
+        "name": "PI (SIMC)",
+        "x": 180.0,
+        "y": 230.0,
+        "w": 120,
+        "h": 40,
+        "p": {
+          "Controller": "PI",
+          "Form": "Parallel",
+          "P": "Kp_PI",
+          "I": "Ki_PI",
+          "D": "0",
+          "N": "100"
+        },
+        "flip": false
+      },
+      {
+        "id": "b21",
+        "type": "Step",
+        "name": "Disturbance2",
+        "x": 296.0,
+        "y": 170.0,
+        "w": 40,
+        "h": 36,
+        "p": {
+          "Time": "td",
+          "Before": "0",
+          "After": "d"
+        },
+        "flip": false
+      },
+      {
+        "id": "b22",
+        "type": "Sum",
+        "name": "Plant input2",
+        "x": 347.0,
+        "y": 237.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "++|"
+        },
+        "flip": false
+      },
+      {
+        "id": "b23",
+        "type": "TransferFcn",
+        "name": "Process2",
+        "x": 435.0,
+        "y": 230.0,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Numerator": "[K]",
+          "Denominator": "[T 1]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b24",
+        "type": "TransportDelay",
+        "name": "Dead time (PI)",
+        "x": 570.0,
+        "y": 230.0,
+        "w": 60,
+        "h": 40,
+        "p": {
+          "DelayTime": "L",
+          "InitialOutput": "0"
+        },
+        "flip": false
+      },
+      {
+        "id": "b33",
+        "type": "Step",
+        "name": "Setpoint3",
+        "x": 30.0,
+        "y": 392.0,
+        "w": 40,
+        "h": 36,
+        "p": {
+          "Time": "1",
+          "Before": "0",
+          "After": "1"
+        },
+        "flip": false
+      },
+      {
+        "id": "b34",
+        "type": "Sum",
+        "name": "Sum3",
+        "x": 117.0,
+        "y": 397.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "b35",
+        "type": "PID",
+        "name": "PID (Ziegler-Nichols)",
+        "x": 180.0,
+        "y": 390.0,
+        "w": 120,
+        "h": 40,
+        "p": {
+          "Controller": "PID",
+          "Form": "Parallel",
+          "P": "Kp_PID",
+          "I": "Ki_PID",
+          "D": "Kd_PID",
+          "N": "20"
+        },
+        "flip": false
+      },
+      {
+        "id": "b36",
+        "type": "Step",
+        "name": "Disturbance3",
+        "x": 296.0,
+        "y": 330.0,
+        "w": 40,
+        "h": 36,
+        "p": {
+          "Time": "td",
+          "Before": "0",
+          "After": "d"
+        },
+        "flip": false
+      },
+      {
+        "id": "b37",
+        "type": "Sum",
+        "name": "Plant input3",
+        "x": 347.0,
+        "y": 397.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "++|"
+        },
+        "flip": false
+      },
+      {
+        "id": "b38",
+        "type": "TransferFcn",
+        "name": "Process3",
+        "x": 435.0,
+        "y": 390.0,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Numerator": "[K]",
+          "Denominator": "[T 1]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b39",
+        "type": "TransportDelay",
+        "name": "Dead time (PID)",
+        "x": 570.0,
+        "y": 390.0,
+        "w": 60,
+        "h": 40,
+        "p": {
+          "DelayTime": "L",
+          "InitialOutput": "0"
+        },
+        "flip": false
+      }
+    ],
+    "lines": [
+      {
+        "id": "l9",
+        "src": {
+          "b": "b2",
+          "port": 0
+        },
+        "dst": {
+          "b": "b3",
+          "port": 0
+        }
+      },
+      {
+        "id": "l10",
+        "src": {
+          "b": "b3",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 0
+        }
+      },
+      {
+        "id": "l11",
+        "src": {
+          "b": "b4",
+          "port": 0
+        },
+        "dst": {
+          "b": "b6",
+          "port": 1
+        }
+      },
+      {
+        "id": "l12",
+        "src": {
+          "b": "b5",
+          "port": 0
+        },
+        "dst": {
+          "b": "b6",
+          "port": 0
+        }
+      },
+      {
+        "id": "l13",
+        "src": {
+          "b": "b6",
+          "port": 0
+        },
+        "dst": {
+          "b": "b7",
+          "port": 0
+        }
+      },
+      {
+        "id": "l14",
+        "src": {
+          "b": "b7",
+          "port": 0
+        },
+        "dst": {
+          "b": "b8",
+          "port": 0
+        }
+      },
+      {
+        "id": "l15",
+        "src": {
+          "b": "b8",
+          "port": 0
+        },
+        "dst": {
+          "b": "b3",
+          "port": 1
+        }
+      },
+      {
+        "id": "l16",
+        "src": {
+          "b": "b8",
+          "port": 0
+        },
+        "dst": {
+          "b": "b1",
+          "port": 0
+        }
+      },
+      {
+        "id": "l17",
+        "src": {
+          "b": "b2",
+          "port": 0
+        },
+        "dst": {
+          "b": "b1",
+          "port": 3
+        },
+        "pts": [
+          [
+            90,
+            90
+          ],
+          [
+            90,
+            -20
+          ],
+          [
+            770,
+            -20
+          ],
+          [
+            770,
+            286
+          ]
+        ]
+      },
+      {
+        "id": "l25",
+        "src": {
+          "b": "b18",
+          "port": 0
+        },
+        "dst": {
+          "b": "b19",
+          "port": 0
+        }
+      },
+      {
+        "id": "l26",
+        "src": {
+          "b": "b19",
+          "port": 0
+        },
+        "dst": {
+          "b": "b20",
+          "port": 0
+        }
+      },
+      {
+        "id": "l27",
+        "src": {
+          "b": "b20",
+          "port": 0
+        },
+        "dst": {
+          "b": "b22",
+          "port": 1
+        }
+      },
+      {
+        "id": "l28",
+        "src": {
+          "b": "b21",
+          "port": 0
+        },
+        "dst": {
+          "b": "b22",
+          "port": 0
+        }
+      },
+      {
+        "id": "l29",
+        "src": {
+          "b": "b22",
+          "port": 0
+        },
+        "dst": {
+          "b": "b23",
+          "port": 0
+        }
+      },
+      {
+        "id": "l30",
+        "src": {
+          "b": "b23",
+          "port": 0
+        },
+        "dst": {
+          "b": "b24",
+          "port": 0
+        }
+      },
+      {
+        "id": "l31",
+        "src": {
+          "b": "b24",
+          "port": 0
+        },
+        "dst": {
+          "b": "b19",
+          "port": 1
+        }
+      },
+      {
+        "id": "l32",
+        "src": {
+          "b": "b24",
+          "port": 0
+        },
+        "dst": {
+          "b": "b1",
+          "port": 1
+        }
+      },
+      {
+        "id": "l40",
+        "src": {
+          "b": "b33",
+          "port": 0
+        },
+        "dst": {
+          "b": "b34",
+          "port": 0
+        }
+      },
+      {
+        "id": "l41",
+        "src": {
+          "b": "b34",
+          "port": 0
+        },
+        "dst": {
+          "b": "b35",
+          "port": 0
+        }
+      },
+      {
+        "id": "l42",
+        "src": {
+          "b": "b35",
+          "port": 0
+        },
+        "dst": {
+          "b": "b37",
+          "port": 1
+        }
+      },
+      {
+        "id": "l43",
+        "src": {
+          "b": "b36",
+          "port": 0
+        },
+        "dst": {
+          "b": "b37",
+          "port": 0
+        }
+      },
+      {
+        "id": "l44",
+        "src": {
+          "b": "b37",
+          "port": 0
+        },
+        "dst": {
+          "b": "b38",
+          "port": 0
+        }
+      },
+      {
+        "id": "l45",
+        "src": {
+          "b": "b38",
+          "port": 0
+        },
+        "dst": {
+          "b": "b39",
+          "port": 0
+        }
+      },
+      {
+        "id": "l46",
+        "src": {
+          "b": "b39",
+          "port": 0
+        },
+        "dst": {
+          "b": "b34",
+          "port": 1
+        }
+      },
+      {
+        "id": "l47",
+        "src": {
+          "b": "b39",
+          "port": 0
+        },
+        "dst": {
+          "b": "b1",
+          "port": 2
+        }
+      }
+    ],
+    "settings": {
+      "stop": "60",
+      "solver": "ode4",
+      "step": "auto",
+      "ws": "% FOPDT process: G(s) = K e^(-L s) / (T s + 1)\nK = 1;\nT = 5;\nL = 1;\n% Ziegler-Nichols open-loop (reaction curve) tuning\nKp_P   = T/(K*L);\nKp_PID = 1.2*T/(K*L);\nKi_PID = Kp_PID/(2*L);\nKd_PID = Kp_PID*0.5*L;\n% SIMC PI tuning with tau_c = L\nKp_PI = T/(K*2*L);\nKi_PI = Kp_PI/min(T, 8*L);\n% load disturbance at the process input\nd = 0.5;\ntd = 30;",
+      "name": "pid_fopdt_tuning_comparison"
+    }
+  }
+}

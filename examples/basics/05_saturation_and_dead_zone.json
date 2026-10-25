@@ -1,0 +1,129 @@
+{
+  "format": "simuwire",
+  "version": 1,
+  "model": {
+    "blocks": [
+      {
+        "id": "b1",
+        "type": "Sine",
+        "name": "Sine Wave",
+        "x": 40.0,
+        "y": 142.0,
+        "w": 40,
+        "h": 36,
+        "p": {
+          "Amplitude": "A",
+          "Bias": "0",
+          "Frequency": "1",
+          "Phase": "0"
+        },
+        "flip": false
+      },
+      {
+        "id": "b2",
+        "type": "Saturation",
+        "name": "Saturation",
+        "x": 200.0,
+        "y": 80.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "UpperLimit": "1",
+          "LowerLimit": "-1"
+        },
+        "flip": false
+      },
+      {
+        "id": "b3",
+        "type": "DeadZone",
+        "name": "Dead Zone",
+        "x": 200.0,
+        "y": 200.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "LowerValue": "-0.5",
+          "UpperValue": "0.5"
+        },
+        "flip": false
+      },
+      {
+        "id": "b4",
+        "type": "Scope",
+        "name": "Scope",
+        "x": 362.0,
+        "y": 124.0,
+        "w": 36,
+        "h": 72,
+        "p": {
+          "NumInputPorts": "3"
+        },
+        "flip": false
+      }
+    ],
+    "lines": [
+      {
+        "id": "l5",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 0
+        }
+      },
+      {
+        "id": "l6",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 0
+        }
+      },
+      {
+        "id": "l7",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b3",
+          "port": 0
+        }
+      },
+      {
+        "id": "l8",
+        "src": {
+          "b": "b2",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 1
+        }
+      },
+      {
+        "id": "l9",
+        "src": {
+          "b": "b3",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 2
+        }
+      }
+    ],
+    "settings": {
+      "stop": "10",
+      "solver": "ode4",
+      "step": "auto",
+      "ws": "A = 2;   % sine amplitude",
+      "name": "saturation_and_dead_zone"
+    }
+  }
+}

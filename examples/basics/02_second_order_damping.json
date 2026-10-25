@@ -1,0 +1,153 @@
+{
+  "format": "simuwire",
+  "version": 1,
+  "model": {
+    "blocks": [
+      {
+        "id": "b1",
+        "type": "Step",
+        "name": "Step",
+        "x": 40.0,
+        "y": 162.0,
+        "w": 40,
+        "h": 36,
+        "p": {
+          "Time": "0",
+          "Before": "0",
+          "After": "1"
+        },
+        "flip": false
+      },
+      {
+        "id": "b2",
+        "type": "TransferFcn",
+        "name": "zeta = 0.2",
+        "x": 185.0,
+        "y": 70.0,
+        "w": 150,
+        "h": 40,
+        "p": {
+          "Numerator": "[wn^2]",
+          "Denominator": "[1 2*z1*wn wn^2]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b3",
+        "type": "TransferFcn",
+        "name": "zeta = 0.5",
+        "x": 185.0,
+        "y": 160.0,
+        "w": 150,
+        "h": 40,
+        "p": {
+          "Numerator": "[wn^2]",
+          "Denominator": "[1 2*z2*wn wn^2]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b4",
+        "type": "TransferFcn",
+        "name": "zeta = 1",
+        "x": 185.0,
+        "y": 250.0,
+        "w": 150,
+        "h": 40,
+        "p": {
+          "Numerator": "[wn^2]",
+          "Denominator": "[1 2*z3*wn wn^2]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b5",
+        "type": "Scope",
+        "name": "Scope",
+        "x": 422.0,
+        "y": 144.0,
+        "w": 36,
+        "h": 72,
+        "p": {
+          "NumInputPorts": "3"
+        },
+        "flip": false
+      }
+    ],
+    "lines": [
+      {
+        "id": "l6",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 0
+        }
+      },
+      {
+        "id": "l7",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b3",
+          "port": 0
+        }
+      },
+      {
+        "id": "l8",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 0
+        }
+      },
+      {
+        "id": "l9",
+        "src": {
+          "b": "b2",
+          "port": 0
+        },
+        "dst": {
+          "b": "b5",
+          "port": 0
+        }
+      },
+      {
+        "id": "l10",
+        "src": {
+          "b": "b3",
+          "port": 0
+        },
+        "dst": {
+          "b": "b5",
+          "port": 1
+        }
+      },
+      {
+        "id": "l11",
+        "src": {
+          "b": "b4",
+          "port": 0
+        },
+        "dst": {
+          "b": "b5",
+          "port": 2
+        }
+      }
+    ],
+    "settings": {
+      "stop": "20",
+      "solver": "ode4",
+      "step": "auto",
+      "ws": "wn = 1;    % natural frequency (rad/s)\nz1 = 0.2;  % underdamped\nz2 = 0.5;\nz3 = 1;    % critically damped",
+      "name": "second_order_damping"
+    }
+  }
+}

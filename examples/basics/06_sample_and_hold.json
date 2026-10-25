@@ -1,0 +1,146 @@
+{
+  "format": "simuwire",
+  "version": 1,
+  "model": {
+    "blocks": [
+      {
+        "id": "b1",
+        "type": "Sine",
+        "name": "Sine Wave",
+        "x": 40.0,
+        "y": 122.0,
+        "w": 40,
+        "h": 36,
+        "p": {
+          "Amplitude": "1",
+          "Bias": "0",
+          "Frequency": "1",
+          "Phase": "0"
+        },
+        "flip": false
+      },
+      {
+        "id": "b2",
+        "type": "ZOH",
+        "name": "Zero-Order Hold",
+        "x": 170.0,
+        "y": 120.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "SampleTime": "Ts"
+        },
+        "flip": false
+      },
+      {
+        "id": "b3",
+        "type": "UnitDelay",
+        "name": "Unit Delay",
+        "x": 300.0,
+        "y": 205.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "InitialCondition": "0",
+          "SampleTime": "Ts"
+        },
+        "flip": false
+      },
+      {
+        "id": "b4",
+        "type": "Scope",
+        "name": "Scope",
+        "x": 452.0,
+        "y": 104.0,
+        "w": 36,
+        "h": 72,
+        "p": {
+          "NumInputPorts": "3"
+        },
+        "flip": false
+      }
+    ],
+    "lines": [
+      {
+        "id": "l5",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 0
+        }
+      },
+      {
+        "id": "l6",
+        "src": {
+          "b": "b2",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 1
+        }
+      },
+      {
+        "id": "l7",
+        "src": {
+          "b": "b2",
+          "port": 0
+        },
+        "dst": {
+          "b": "b3",
+          "port": 0
+        }
+      },
+      {
+        "id": "l8",
+        "src": {
+          "b": "b3",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 2
+        }
+      },
+      {
+        "id": "l9",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 0
+        },
+        "pts": [
+          [
+            94,
+            140
+          ],
+          [
+            94,
+            80
+          ],
+          [
+            420,
+            80
+          ],
+          [
+            420,
+            122
+          ]
+        ]
+      }
+    ],
+    "settings": {
+      "stop": "10",
+      "solver": "ode4",
+      "step": "auto",
+      "ws": "Ts = 0.5;   % sample time (s)",
+      "name": "sample_and_hold"
+    }
+  }
+}

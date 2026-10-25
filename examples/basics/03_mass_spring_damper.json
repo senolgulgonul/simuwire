@@ -1,0 +1,246 @@
+{
+  "format": "simuwire",
+  "version": 1,
+  "model": {
+    "blocks": [
+      {
+        "id": "b1",
+        "type": "Step",
+        "name": "Force F",
+        "x": 30.0,
+        "y": 82.0,
+        "w": 40,
+        "h": 36,
+        "p": {
+          "Time": "1",
+          "Before": "0",
+          "After": "1"
+        },
+        "flip": false
+      },
+      {
+        "id": "b2",
+        "type": "Sum",
+        "name": "Sum",
+        "x": 117.0,
+        "y": 87.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "b3",
+        "type": "Sum",
+        "name": "Sum1",
+        "x": 177.0,
+        "y": 87.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "b4",
+        "type": "Gain",
+        "name": "1/m",
+        "x": 240.0,
+        "y": 80.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "Gain": "1/m"
+        },
+        "flip": false
+      },
+      {
+        "id": "b5",
+        "type": "Integrator",
+        "name": "Velocity",
+        "x": 330.0,
+        "y": 80.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "InitialCondition": "0"
+        },
+        "flip": false
+      },
+      {
+        "id": "b6",
+        "type": "Integrator",
+        "name": "Position",
+        "x": 440.0,
+        "y": 80.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "InitialCondition": "0"
+        },
+        "flip": false
+      },
+      {
+        "id": "b7",
+        "type": "Scope",
+        "name": "Scope",
+        "x": 562.0,
+        "y": 82.0,
+        "w": 36,
+        "h": 36,
+        "p": {
+          "NumInputPorts": "1"
+        },
+        "flip": false
+      },
+      {
+        "id": "b8",
+        "type": "Gain",
+        "name": "c",
+        "x": 330.0,
+        "y": 155.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "Gain": "c"
+        },
+        "flip": true
+      },
+      {
+        "id": "b9",
+        "type": "Gain",
+        "name": "k",
+        "x": 440.0,
+        "y": 230.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "Gain": "k"
+        },
+        "flip": true
+      }
+    ],
+    "lines": [
+      {
+        "id": "l10",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 0
+        }
+      },
+      {
+        "id": "l11",
+        "src": {
+          "b": "b2",
+          "port": 0
+        },
+        "dst": {
+          "b": "b3",
+          "port": 0
+        }
+      },
+      {
+        "id": "l12",
+        "src": {
+          "b": "b3",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 0
+        }
+      },
+      {
+        "id": "l13",
+        "src": {
+          "b": "b4",
+          "port": 0
+        },
+        "dst": {
+          "b": "b5",
+          "port": 0
+        }
+      },
+      {
+        "id": "l14",
+        "src": {
+          "b": "b5",
+          "port": 0
+        },
+        "dst": {
+          "b": "b6",
+          "port": 0
+        }
+      },
+      {
+        "id": "l15",
+        "src": {
+          "b": "b6",
+          "port": 0
+        },
+        "dst": {
+          "b": "b7",
+          "port": 0
+        }
+      },
+      {
+        "id": "l16",
+        "src": {
+          "b": "b5",
+          "port": 0
+        },
+        "dst": {
+          "b": "b8",
+          "port": 0
+        }
+      },
+      {
+        "id": "l17",
+        "src": {
+          "b": "b6",
+          "port": 0
+        },
+        "dst": {
+          "b": "b9",
+          "port": 0
+        }
+      },
+      {
+        "id": "l18",
+        "src": {
+          "b": "b8",
+          "port": 0
+        },
+        "dst": {
+          "b": "b3",
+          "port": 1
+        }
+      },
+      {
+        "id": "l19",
+        "src": {
+          "b": "b9",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 1
+        }
+      }
+    ],
+    "settings": {
+      "stop": "20",
+      "solver": "ode4",
+      "step": "auto",
+      "ws": "m = 1;    % mass (kg)\nc = 0.5;  % damping (N·s/m)\nk = 2;    % stiffness (N/m)",
+      "name": "mass_spring_damper"
+    }
+  }
+}

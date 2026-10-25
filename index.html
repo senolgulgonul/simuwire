@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simuwire v1.0 – block diagram simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --bg:#e8ecf1; --bar:#f5f7f9; --panel:#fbfcfd; --line:#c6ced8; --text:#1c2531; --muted:#5a6879;
+  --canvas:#ffffff; --bfill:#ffffff; --bstroke:#1c2531; --bshadow:#c3cad3; --wire:#1c2531;
+  --sel:#0b6bcb; --selbg:rgba(11,107,203,.10); --err:#c4291c; --warn:#9a6200; --ok:#1e7a37;
+  --run:#1e8a3c; --hover:#e1e8f0; --dlg:#ffffff; --input:#ffffff; --desc:#f1f4f7;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#191c21; --bar:#22262d; --panel:#1f2329; --line:#3a414b; --text:#e2e6eb; --muted:#9ba5b2;
+    --canvas:#15181c; --bfill:#1e2228; --bstroke:#d3d9e0; --bshadow:#0b0d10; --wire:#d3d9e0;
+    --sel:#5aa8ff; --selbg:rgba(90,168,255,.14); --err:#ff6b5e; --warn:#f0b54a; --ok:#6fd08a;
+    --run:#3fb763; --hover:#2b3038; --dlg:#22262d; --input:#181b20; --desc:#1a1d22;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#191c21; --bar:#22262d; --panel:#1f2329; --line:#3a414b; --text:#e2e6eb; --muted:#9ba5b2;
+  --canvas:#15181c; --bfill:#1e2228; --bstroke:#d3d9e0; --bshadow:#0b0d10; --wire:#d3d9e0;
+  --sel:#5aa8ff; --selbg:rgba(90,168,255,.14); --err:#ff6b5e; --warn:#f0b54a; --ok:#6fd08a;
+  --run:#3fb763; --hover:#2b3038; --dlg:#22262d; --input:#181b20; --desc:#1a1d22;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.4 "Source Sans 3","Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+#app{display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:minmax(0,1fr);height:100%;position:relative}
+
+/* toolbar */
+.toolbar{display:flex;align-items:center;gap:4px;padding:5px 8px;background:var(--bar);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-weight:700;font-size:15px;margin-right:10px;display:flex;align-items:center;gap:6px;letter-spacing:.01em}
+.brand svg{width:20px;height:20px}
+.ver{font-weight:600;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 4px;line-height:16px}
+.sep{width:1px;align-self:stretch;background:var(--line);margin:2px 6px}
+.tb{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 9px;border:1px solid transparent;border-radius:4px;background:none;cursor:pointer;white-space:nowrap}
+.tb:hover{background:var(--hover);border-color:var(--line)}
+.tb svg{width:16px;height:16px;flex:none}
+.tb:focus-visible,.lib-item:focus-visible,.cat-head:focus-visible{outline:2px solid var(--sel);outline-offset:1px}
+.tb.run{color:#fff;background:var(--run);border-color:var(--run);font-weight:600;padding:0 12px}
+.tb.run:hover{filter:brightness(1.08);background:var(--run)}
+.stop{display:inline-flex;align-items:center;gap:6px;color:var(--muted);margin-left:4px}
+.stop input{width:62px;height:28px;padding:0 6px;border:1px solid var(--line);border-radius:3px;background:var(--input);text-align:right}
+.spacer{flex:1}
+.zoomlbl{min-width:44px;text-align:center;color:var(--muted);font-variant-numeric:tabular-nums}
+.only-narrow{display:none}
+
+/* main */
+.main{display:grid;grid-template-columns:var(--libw,250px) 1fr;min-height:0;position:relative}
+.library{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0;position:relative}
+.lib-resize{position:absolute;top:0;bottom:0;right:-4px;width:8px;cursor:col-resize;z-index:5;touch-action:none}
+.lib-resize::after{content:"";position:absolute;top:0;bottom:0;left:3px;width:2px;background:transparent;transition:background .12s}
+.lib-resize:hover::after,.lib-resize.active::after,.lib-resize:focus-visible::after{background:var(--sel)}
+.lib-resize:focus-visible{outline:none}
+body.resizing{cursor:col-resize;user-select:none}
+.lib-head{padding:8px;border-bottom:1px solid var(--line)}
+.lib-head input{width:100%;height:30px;padding:0 8px;border:1px solid var(--line);border-radius:3px;background:var(--input)}
+.tree{overflow:auto;padding:4px 0 12px;flex:1}
+.cat-head{display:flex;align-items:center;gap:6px;width:100%;padding:3px 8px;border:none;background:none;cursor:pointer;text-align:left;font-size:14.5px}
+.cat-head:hover{background:var(--hover)}
+.cat-head .chev{width:0;height:0;border-left:6px solid var(--text);border-top:5px solid transparent;border-bottom:5px solid transparent;transition:transform .12s}
+.cat.open>.cat-head .chev{transform:rotate(90deg)}
+.cat-items{display:none;padding:2px 0 6px}
+.cat.open>.cat-items{display:block}
+.root-head{font-weight:600}
+.lib-item{display:flex;align-items:center;gap:8px;padding:3px 8px 3px 30px;cursor:grab;user-select:none;touch-action:none;border:none;background:none;width:100%;text-align:left}
+.lib-item:hover{background:var(--hover)}
+.lib-item svg{width:38px;height:28px;flex:none;overflow:visible}
+.lib-note{padding:10px 12px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+
+.canvas-wrap{position:relative;min-width:0;min-height:0;background:var(--canvas);overflow:hidden}
+#canvas{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+#canvas.panning{cursor:grabbing}
+.empty[hidden]{display:none}
+.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.empty div{max-width:340px;text-align:center;color:var(--muted);pointer-events:auto}
+.empty p{margin:0 0 10px}
+.empty .tb{border-color:var(--line);margin:0 3px}
+
+/* svg blocks */
+.bshape{fill:var(--bfill);stroke:var(--bstroke);stroke-width:1.2}
+.bshadow{fill:var(--bshadow)}
+.blk{cursor:move}
+.blk.sel .bshape{stroke:var(--sel);stroke-width:2.2}
+.blk.err .bshape{stroke:var(--err);stroke-width:2.4}
+.blk.unknown .bshape{stroke-dasharray:4 3;fill:var(--desc)}
+.bicon{fill:none;stroke:var(--bstroke);stroke-width:1.2;stroke-linejoin:round}
+.btext{fill:var(--bstroke);font-size:12px;text-anchor:middle;dominant-baseline:central}
+.bsmall{fill:var(--bstroke);font-size:10px;text-anchor:middle;dominant-baseline:central}
+.bname{fill:var(--text);font-size:11.5px;text-anchor:middle}
+.blk.sel .bname{fill:var(--sel)}
+.port{fill:none;stroke:var(--bstroke);stroke-width:1.2}
+.phit{fill:transparent;cursor:crosshair}
+.blk:hover .phit{fill:var(--selbg);stroke:var(--sel);stroke-width:.8;stroke-opacity:.5}
+.blk .phit:hover{fill:var(--selbg);stroke:var(--sel);stroke-width:1.4;stroke-opacity:1}
+.tb[hidden]{display:none}
+.phit.cand{fill:var(--selbg);stroke:var(--sel)}
+.wire{fill:none;stroke:var(--wire);stroke-width:1.25}
+.wire.sel{stroke:var(--sel);stroke-width:2.2}
+.whit{fill:none;stroke:transparent;stroke-width:11;cursor:pointer}
+.whit.sh{cursor:ns-resize}.whit.sv{cursor:ew-resize}
+.wtemp{fill:none;stroke:var(--sel);stroke-width:1.4;stroke-dasharray:5 4}
+.arr{fill:var(--wire)} .arrsel{fill:var(--sel)}
+.bdot{fill:var(--wire)}
+
+/* status */
+.status{display:flex;align-items:center;gap:12px;padding:4px 10px;background:var(--bar);border-top:1px solid var(--line);font-size:13px;min-height:28px}
+#msg{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#msg.err{color:var(--err)} #msg.warn{color:var(--warn)} #msg.ok{color:var(--ok)}
+#solverInfo{color:var(--muted);white-space:nowrap}
+
+/* dialogs */
+.dlg-back{position:absolute;inset:0;background:rgba(10,14,20,.35);display:flex;align-items:center;justify-content:center;z-index:50;padding:12px}
+.dlg{background:var(--dlg);border:1px solid var(--line);border-radius:6px;box-shadow:0 18px 50px rgba(0,0,0,.3);width:min(440px,100%);max-height:100%;display:flex;flex-direction:column}
+.dlg-title{padding:9px 14px;border-bottom:1px solid var(--line);font-weight:600}
+.dlg-body{padding:12px 14px;overflow:auto}
+.desc{border:1px solid var(--line);background:var(--desc);border-radius:4px;padding:6px 10px 8px;margin:0 0 12px}
+.desc legend{padding:0 4px;font-weight:600;font-size:13px}
+.desc p{margin:0;font-size:13.5px;color:var(--muted)}
+.fld{display:block;margin:0 0 10px}
+.fld span{display:block;font-size:13px;margin-bottom:3px}
+.fld input,.fld select,.fld textarea{width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:3px;background:var(--input)}
+.fld textarea{min-height:110px;font-family:Consolas,"Cascadia Mono",Menlo,monospace;font-size:13px;resize:vertical}
+.fld .ferr{color:var(--err);font-size:12.5px;margin-top:3px;display:block;min-height:0}
+.hint{font-size:12.5px;color:var(--muted);margin:-4px 0 10px}
+.dlg-actions{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px;border-top:1px solid var(--line)}
+.btn{height:30px;padding:0 14px;border:1px solid var(--line);border-radius:4px;background:var(--bar);cursor:pointer}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--sel);border-color:var(--sel);color:#fff}
+.btn:focus-visible{outline:2px solid var(--sel);outline-offset:1px}
+.keys{border-collapse:collapse;width:100%;font-size:13.5px}
+.keys td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.keys td:first-child{white-space:nowrap;font-weight:600}
+
+/* scope */
+.scope{position:absolute;z-index:30;width:min(460px,94vw);height:290px;min-width:260px;min-height:200px;resize:both;overflow:hidden;
+  background:#ffffff;border:1px solid #9a9a9a;border-radius:5px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:grid;grid-template-rows:auto 1fr auto;color:#111111}
+.scope header{display:flex;align-items:center;gap:6px;padding:5px 6px 5px 10px;background:#ececec;border-bottom:1px solid #c8c8c8;cursor:move;touch-action:none;user-select:none}
+.scope header b{flex:1;font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scope header button{height:24px;min-width:26px;border:1px solid #b5b5b5;background:#ffffff;border-radius:3px;color:#111111;cursor:pointer;font-size:12.5px;padding:0 7px}
+.scope header button:hover{background:#f3f3f3}
+.scope canvas{width:100%;height:100%;display:block}
+.scope footer{padding:3px 10px;font-size:12.5px;color:#333333;background:#f6f6f6;border-top:1px solid #dddddd;min-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+
+.ghost{position:fixed;z-index:60;pointer-events:none;opacity:.85}
+.menu{position:absolute;z-index:45;background:var(--dlg);border:1px solid var(--line);border-radius:6px;box-shadow:0 12px 36px rgba(0,0,0,.22);width:min(360px,92vw);max-height:min(72vh,560px);overflow:auto;padding:4px 0}
+.menu-group{padding:8px 12px 3px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.menu-item{display:block;width:100%;text-align:left;border:none;background:none;padding:6px 12px;cursor:pointer}
+.menu-item b{display:block;font-weight:600;font-size:14px}
+.menu-item span{display:block;font-size:12.5px;color:var(--muted);line-height:1.35}
+.menu-item:hover,.menu-item:focus-visible{background:var(--hover);outline:none}
+.tb .caret{width:9px;height:9px;margin-left:-1px}
+.ghost svg{width:60px;height:44px;overflow:visible}
+
+@media (max-width:760px){
+  .main{grid-template-columns:1fr}
+  .lib-resize{display:none}
+  .library{position:absolute;z-index:20;top:0;bottom:0;left:0;width:min(290px,86vw);box-shadow:6px 0 24px rgba(0,0,0,.25);transform:translateX(-102%);transition:transform .18s}
+  .library.show{transform:none}
+  .only-narrow{display:inline-flex}
+  .lbl{display:none}
+  .brand span,.brand .ver{display:none}
+  #solverInfo{display:none}
+  .toolbar{gap:2px}
+  .tb{padding:0 7px}
+}
+@media (prefers-reduced-motion: reduce){ .library,.cat-head .chev{transition:none} }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="toolbar">
+    <div class="brand" aria-label="Simuwire v1.0">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="1.5" y="5" width="7" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 10h4" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.5l2.5 2.5-2.5 2.5z" fill="currentColor"/><rect x="14.5" y="5" width="4" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span>Simuwire</span><small class="ver">v1.0</small>
+    </div>
+    <button class="tb only-narrow" id="btnLib" title="Block library"><svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.6"/></svg></button>
+    <button class="tb" id="btnNew" title="New model"><svg viewBox="0 0 16 16"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M9.5 1.5v3h3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg><span class="lbl">New</span></button>
+    <button class="tb" id="btnOpen" title="Open a Simuwire model (.json) or a Simulink file (.slx)"><svg viewBox="0 0 16 16"><path d="M1.5 3.5h5l1.5 1.5h6.5v8.5h-13z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg><span class="lbl">Open</span></button>
+    <button class="tb" id="btnSave" title="Save the model to a file (Ctrl+S)" hidden><svg viewBox="0 0 16 16"><path d="M2.5 2.5h9l2 2v9h-11z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M5 2.5v3.5h5V2.5M5 13.5v-4h6v4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg><span class="lbl">Save</span></button>
+    <button class="tb" id="btnExample" title="Example models" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 16 16"><path d="M1.5 13.5c3 0 3-9 6.5-9s3.5 6 6.5 6" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="lbl">Examples</span><svg class="caret" viewBox="0 0 10 10"><path d="M1.5 3.5l3.5 3.5 3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+    <button class="tb" id="btnUndo" title="Undo (Ctrl+Z)"><svg viewBox="0 0 16 16"><path d="M5 3L2 6l3 3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 6h7a4 4 0 010 8H6" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="lbl">Undo</span></button>
+    <div class="sep"></div>
+    <button class="tb run" id="btnRun" title="Run simulation (Ctrl+T)"><svg viewBox="0 0 16 16"><path d="M4 2.5l9 5.5-9 5.5z" fill="currentColor"/></svg>Run</button>
+    <label class="stop" title="Simulation stop time (s)"><span class="lbl">Stop time</span><input id="stopTime" value="10" inputmode="decimal" aria-label="Stop time"></label>
+    <button class="tb" id="btnSettings" title="Model settings and variables"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.4" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 1v2.2M8 12.8V15M1 8h2.2M12.8 8H15M3 3l1.6 1.6M11.4 11.4L13 13M13 3l-1.6 1.6M4.6 11.4L3 13" stroke="currentColor" stroke-width="1.3"/></svg><span class="lbl">Settings</span></button>
+    <div class="spacer"></div>
+    <button class="tb" id="btnZoomOut" title="Zoom out"><svg viewBox="0 0 16 16"><path d="M3 8h10" stroke="currentColor" stroke-width="1.6"/></svg></button>
+    <span class="zoomlbl" id="zoomLbl">100%</span>
+    <button class="tb" id="btnZoomIn" title="Zoom in"><svg viewBox="0 0 16 16"><path d="M3 8h10M8 3v10" stroke="currentColor" stroke-width="1.6"/></svg></button>
+    <button class="tb" id="btnFit" title="Fit model to view (Space)"><svg viewBox="0 0 16 16"><path d="M1.5 5V1.5H5M11 1.5h3.5V5M14.5 11v3.5H11M5 14.5H1.5V11" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="lbl">Fit</span></button>
+    <button class="tb" id="btnHelp" title="Help and about"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M6 6.2a2 2 0 113 1.7c-.7.4-1 .8-1 1.6M8 11.3v.4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+    <input type="file" id="fileIn" accept=".slx,.json" hidden>
+  </header>
+
+  <div class="main">
+    <aside class="library" id="library" aria-label="Block library">
+      <div class="lib-head"><input id="libSearch" placeholder="Search blocks" aria-label="Search blocks"></div>
+      <div class="tree" id="tree"></div>
+      <div class="lib-note">Drag blocks onto the canvas, or click one to add it.</div>
+      <div class="lib-resize" id="libResize" role="separator" aria-orientation="vertical" aria-label="Resize block library" tabindex="0" title="Drag to resize. Double-click to reset."></div>
+    </aside>
+    <div class="canvas-wrap" id="wrap">
+      <svg id="canvas" aria-label="Model canvas">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="arr" d="M0,1 L10,5 L0,9 z"/></marker>
+          <marker id="arrsel" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="arrsel" d="M0,1 L10,5 L0,9 z"/></marker>
+        </defs>
+        <g id="world"><g id="wires"></g><g id="blocks"></g><g id="temp"></g></g>
+      </svg>
+      <div class="empty" id="empty" hidden>
+        <div>
+          <p>This model is empty. Drag a block from the library, or open a saved model or an .slx file.</p>
+          <button class="tb" data-act="open">Open a file</button><button class="tb" data-act="example">Load an example</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="status">
+    <span id="msg">Ready</span>
+    <span id="solverInfo"></span>
+  </footer>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   1) Expression evaluator (MATLAB-like: 0.5*K, [T 1], sin(u), u(1))
+   ===================================================================== */
+const FUNCS={sin:Math.sin,cos:Math.cos,tan:Math.tan,asin:Math.asin,acos:Math.acos,atan:Math.atan,atan2:Math.atan2,
+  exp:Math.exp,log:Math.log,log10:Math.log10,sqrt:Math.sqrt,abs:Math.abs,sign:Math.sign,floor:Math.floor,ceil:Math.ceil,
+  round:Math.round,min:Math.min,max:Math.max,sinh:Math.sinh,cosh:Math.cosh,tanh:Math.tanh,pow:Math.pow,
+  mod:(a,b)=>b===0?a:a-Math.floor(a/b)*b,rem:(a,b)=>a%b};
+const CONSTS={pi:Math.PI,Inf:Infinity,inf:Infinity,eps:2.220446049250313e-16};
+
+function tokenize(s){
+  const toks=[];let i=0,sp=false;
+  while(i<s.length){
+    const c=s[i];
+    if(/\s/.test(c)){sp=true;i++;continue;}
+    const rest=s.slice(i);let m;
+    if((m=/^(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/.exec(rest))){toks.push({k:'num',v:parseFloat(m[0]),sb:sp});i+=m[0].length;}
+    else if((m=/^[A-Za-z_]\w*/.exec(rest))){toks.push({k:'id',v:m[0],sb:sp});i+=m[0].length;}
+    else if((m=/^(\.\*|\.\/|\.\^|>=|<=|==|~=|!=)/.exec(rest))){toks.push({k:'op',v:m[0].replace(/^\./,''),sb:sp});i+=m[0].length;}
+    else if('+-*/^()[],;<>'.includes(c)){toks.push({k:'op',v:c,sb:sp});i++;}
+    else throw new Error(`unrecognized character “${c}”`);
+    sp=false;
+  }
+  toks.push({k:'end',v:'',sb:sp});
+  return toks;
+}
+function parseExpr(src){
+  const T=tokenize(String(src));let p=0,inBr=0;
+  const isOp=v=>T[p].k==='op'&&T[p].v===v;
+  const expect=v=>{if(!isOp(v))throw new Error(`expected “${v}”`);p++;};
+  const CMP=['<','>','<=','>=','==','~=','!='];
+  function cmp(){let a=add();while(T[p].k==='op'&&CMP.includes(T[p].v)){const op=T[p++].v;a={n:'bin',op,a,b:add()};}return a;}
+  function add(){let a=mul();
+    while(T[p].k==='op'&&(T[p].v==='+'||T[p].v==='-')){
+      if(inBr&&T[p].sb&&!T[p+1].sb)break;
+      const op=T[p++].v;a={n:'bin',op,a,b:mul()};}
+    return a;}
+  function mul(){let a=unary();while(T[p].k==='op'&&(T[p].v==='*'||T[p].v==='/')){const op=T[p++].v;a={n:'bin',op,a,b:unary()};}return a;}
+  function unary(){if(isOp('-')){p++;return{n:'neg',a:unary()};}if(isOp('+')){p++;return unary();}return pow();}
+  function pow(){const a=prim();if(isOp('^')){p++;return{n:'bin',op:'^',a,b:unary()};}return a;}
+  function prim(){
+    const t=T[p++];
+    if(t.k==='num')return{n:'num',v:t.v};
+    if(t.k==='id'){
+      if(isOp('(')&&!(inBr&&T[p].sb)){
+        p++;const args=[];const save=inBr;inBr=0;
+        if(!isOp(')')){args.push(cmp());while(isOp(',')){p++;args.push(cmp());}}
+        expect(')');inBr=save;return{n:'call',f:t.v,args};
+      }
+      return{n:'var',v:t.v};
+    }
+    if(t.k==='op'&&t.v==='('){const save=inBr;inBr=0;const e=cmp();expect(')');inBr=save;return e;}
+    if(t.k==='op'&&t.v==='['){
+      inBr++;const items=[];
+      while(!isOp(']')){
+        if(T[p].k==='end')throw new Error('missing “]”');
+        if(isOp(',')||isOp(';')){p++;continue;}
+        items.push(cmp());
+      }
+      p++;inBr--;return{n:'vec',items};
+    }
+    throw new Error(t.k==='end'?'incomplete expression':`unexpected “${t.v}”`);
+  }
+  const e=cmp();
+  if(T[p].k!=='end')throw new Error(`unexpected “${T[p].v}”`);
+  return e;
+}
+function scalar(v){if(Array.isArray(v)){if(v.length===1)return v[0];throw new Error('expected a single number, got a vector');}return v;}
+function evalAst(n,env){
+  switch(n.n){
+    case 'num':return n.v;
+    case 'var':
+      if(Object.prototype.hasOwnProperty.call(env,n.v))return env[n.v];
+      if(n.v in CONSTS)return CONSTS[n.v];
+      throw new Error(`undefined variable “${n.v}”`);
+    case 'neg':{const a=evalAst(n.a,env);return Array.isArray(a)?a.map(x=>-x):-a;}
+    case 'bin':{
+      const a=scalar(evalAst(n.a,env)),b=scalar(evalAst(n.b,env));
+      switch(n.op){case '+':return a+b;case '-':return a-b;case '*':return a*b;case '/':return a/b;case '^':return Math.pow(a,b);
+        case '<':return +(a<b);case '>':return +(a>b);case '<=':return +(a<=b);case '>=':return +(a>=b);case '==':return +(a===b);default:return +(a!==b);}
+    }
+    case 'call':{
+      if(Object.prototype.hasOwnProperty.call(env,n.f)){
+        const v=env[n.f],ix=scalar(evalAst(n.args[0],env));
+        if(Array.isArray(v)){if(v[ix-1]===undefined)throw new Error(`${n.f}(${ix}) index out of range`);return v[ix-1];}
+        if(ix===1)return v;throw new Error(`${n.f}(${ix}) index out of range`);
+      }
+      const f=FUNCS[n.f];if(!f)throw new Error(`unknown function “${n.f}”`);
+      return f(...n.args.map(a=>scalar(evalAst(a,env))));
+    }
+    case 'vec':{const out=[];for(const it of n.items){const v=evalAst(it,env);if(Array.isArray(v))out.push(...v);else out.push(v);}return out;}
+  }
+}
+function parseWorkspace(text){
+  const env={};
+  for(const raw of String(text||'').split(/[;\n]/)){
+    const line=raw.replace(/%.*$/,'').trim();if(!line)continue;
+    const m=/^([A-Za-z_]\w*)\s*=\s*(.+)$/.exec(line);
+    if(!m)throw new Error(`Can’t read variable line “${line}”. Use the form K = 2`);
+    try{env[m[1]]=evalAst(parseExpr(m[2]),env);}catch(e){throw new Error(`Variable ${m[1]}: ${e.message}`);}
+  }
+  return env;
+}
+function astText(n){
+  switch(n.n){
+    case 'num':return String(+n.v.toPrecision(4));
+    case 'var':return n.v;
+    case 'neg':return '-'+astText(n.a);
+    case 'bin':return astText(n.a)+n.op+astText(n.b);
+    case 'call':return n.f+'('+n.args.map(astText).join(',')+')';
+    case 'vec':return '['+n.items.map(astText).join(' ')+']';
+  }
+}
+const SUP={0:'⁰',1:'¹',2:'²',3:'³',4:'⁴',5:'⁵',6:'⁶',7:'⁷',8:'⁸',9:'⁹'};
+function polyText(str){
+  const s=String(str).trim();
+  const inner=s.startsWith('[')&&s.endsWith(']')?s.slice(1,-1):s;
+  let items;
+  try{items=parseExpr('['+inner+']').items;}catch(e){return s;}
+  const n=items.length,terms=[];
+  items.forEach((it,i)=>{
+    const pw=n-1-i;let c=astText(it);if(c==='0')return;
+    const sv=pw===0?'':pw===1?'s':'s'+String(pw).split('').map(d=>SUP[d]).join('');
+    const paren=it.n==='bin';
+    let t;
+    if(pw===0)t=c;else if(c==='1')t=sv;else if(c==='-1')t='-'+sv;else t=(paren?`(${c})`:c)+sv;
+    terms.push(t);
+  });
+  if(!terms.length)return '0';
+  return terms.join('+').replace(/\+-/g,'−');
+}
+
+/* =====================================================================
+   2) Block definitions
+   ===================================================================== */
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const TX=(x,y,s,cls='btext')=>`<text x="${x}" y="${y}" class="${cls}">${esc(s)}</text>`;
+function fit(s,w){s=String(s);const max=Math.max(3,Math.floor((w-4)/6.6));return s.length>max?s.slice(0,max-1)+'…':s;}
+function frac(w,h,a,b){
+  a=fit(a,w);b=fit(b,w);const cx=w/2,cy=h/2;
+  const lw=Math.min(w-8,Math.max(a.length,b.length)*6.8+6);
+  return TX(cx,cy-8,a)+`<line x1="${cx-lw/2}" y1="${cy}" x2="${cx+lw/2}" y2="${cy}" class="bicon"/>`+TX(cx,cy+9,b);
+}
+function plotIcon(w,h,pts){
+  const mx=Math.min(8,w*.16),my=Math.min(8,h*.2),W=w-2*mx,H=h-2*my;
+  return `<polyline class="bicon" points="${pts.map(([x,y])=>(mx+x*W).toFixed(1)+','+(my+(1-y)*H).toFixed(1)).join(' ')}"/>`;
+}
+const sinePts=Array.from({length:25},(_,i)=>[i/24,.5+.38*Math.sin(i/24*2*Math.PI)]);
+function sumSigns(str){
+  const s=String(str??'').trim();
+  if(/^\d+$/.test(s))return '+'.repeat(Math.max(1,Math.min(8,+s))).split('');
+  const r=s.split('').filter(c=>c==='+'||c==='-');
+  return r.length?r.slice(0,8):['+','+'];
+}
+function prodOps(str){
+  const s=String(str??'').trim();
+  if(/^\d+$/.test(s))return '*'.repeat(Math.max(1,Math.min(8,+s))).split('');
+  const r=s.split('').filter(c=>c==='*'||c==='/');
+  return r.length?r.slice(0,8):['*','*'];
+}
+const clampInt=(v,lo,hi)=>{const n=parseInt(v,10);return isFinite(n)?Math.max(lo,Math.min(hi,n)):lo;};
+const hit=(t,Ts)=>Math.abs(t/Ts-Math.round(t/Ts))<1e-7;
+function fmtVal(v,long){
+  if(v==null||!isFinite(v))return String(v);
+  if(long)return String(+v.toPrecision(15));
+  const a=Math.abs(v);
+  if(a!==0&&(a<1e-3||a>=1e5))return v.toExponential(3);
+  return String(+v.toFixed(4));
+}
+
+const BLOCKS={
+  Constant:{label:'Constant',w:50,h:30,def:{Value:'1'},
+    fields:[{k:'Value',l:'Constant value'}],desc:'Outputs a constant signal that does not change over time.',
+    nIn:()=>0,nOut:()=>1,init(s,E){s.v=E.num('Value');},out:s=>s.v,
+    icon:b=>TX(b.w/2,b.h/2,fit(b.p.Value,b.w))},
+  Step:{label:'Step',w:40,h:36,def:{Time:'1',Before:'0',After:'1'},
+    fields:[{k:'Time',l:'Step time (s)'},{k:'Before',l:'Initial value'},{k:'After',l:'Final value'}],
+    desc:'Outputs a step that jumps from the initial to the final value at the step time.',
+    nIn:()=>0,nOut:()=>1,init(s,E){s.tm=E.num('Time');s.a=E.num('Before');s.c=E.num('After');},
+    out:(s,t)=>t<s.tm-1e-12?s.a:s.c,icon:b=>plotIcon(b.w,b.h,[[0,.12],[.45,.12],[.45,.88],[1,.88]])},
+  Sine:{label:'Sine Wave',w:40,h:36,def:{Amplitude:'1',Bias:'0',Frequency:'1',Phase:'0'},
+    fields:[{k:'Amplitude',l:'Amplitude'},{k:'Bias',l:'Bias'},{k:'Frequency',l:'Frequency (rad/s)'},{k:'Phase',l:'Phase (rad)'}],
+    desc:'Outputs amplitude·sin(frequency·t + phase) + bias.',
+    nIn:()=>0,nOut:()=>1,init(s,E){s.A=E.num('Amplitude');s.bias=E.num('Bias');s.w=E.num('Frequency');s.ph=E.num('Phase');E.rate(Math.abs(s.w)*5);},
+    out:(s,t)=>s.A*Math.sin(s.w*t+s.ph)+s.bias,icon:b=>plotIcon(b.w,b.h,sinePts)},
+  Ramp:{label:'Ramp',w:40,h:36,def:{slope:'1',start:'0',InitialOutput:'0'},
+    fields:[{k:'slope',l:'Slope'},{k:'start',l:'Start time (s)'},{k:'InitialOutput',l:'Initial output'}],
+    desc:'Outputs a ramp that rises at a constant slope after the start time.',
+    nIn:()=>0,nOut:()=>1,init(s,E){s.k=E.num('slope');s.st=E.num('start');s.x0=E.num('InitialOutput');},
+    out:(s,t)=>t<s.st?s.x0:s.x0+s.k*(t-s.st),icon:b=>plotIcon(b.w,b.h,[[0,.12],[.35,.12],[1,.88]])},
+  Clock:{label:'Clock',w:36,h:36,def:{},fields:[],desc:'Outputs the current simulation time t.',
+    nIn:()=>0,nOut:()=>1,init(){},out:(s,t)=>t,
+    icon:b=>{const r=Math.min(b.w,b.h)/2-6,cx=b.w/2,cy=b.h/2;return `<circle cx="${cx}" cy="${cy}" r="${r}" class="bicon"/><path class="bicon" d="M${cx},${cy-r+3}V${cy}L${cx+r-4},${cy}"/>`;}},
+  Pulse:{label:'Pulse Generator',w:40,h:36,def:{Amplitude:'1',Period:'10',PulseWidth:'5',PhaseDelay:'0'},
+    fields:[{k:'Amplitude',l:'Amplitude'},{k:'Period',l:'Period (s)'},{k:'PulseWidth',l:'Pulse width (% of period)'},{k:'PhaseDelay',l:'Phase delay (s)'}],
+    desc:'Outputs a periodic rectangular pulse train.',
+    nIn:()=>0,nOut:()=>1,init(s,E){s.A=E.num('Amplitude');s.T=E.num('Period');s.pw=E.num('PulseWidth');s.d=E.num('PhaseDelay');if(!(s.T>0))throw new Error('period must be positive');},
+    out:(s,t)=>{if(t<s.d)return 0;const ph=((t-s.d)%s.T)/s.T;return ph<s.pw/100-1e-12?s.A:0;},
+    icon:b=>plotIcon(b.w,b.h,[[0,.12],[.12,.12],[.12,.88],[.38,.88],[.38,.12],[.62,.12],[.62,.88],[.88,.88],[.88,.12],[1,.12]])},
+  Scope:{label:'Scope',w:36,h:36,def:{NumInputPorts:'1'},sink:true,
+    fields:[{k:'NumInputPorts',l:'Number of inputs (1–8)',raw:true}],
+    desc:'Plots its input signals over time. Double-click the block to open the plot window.',
+    nIn:b=>clampInt(b.p.NumInputPorts,1,8),nOut:()=>0,
+    init(s){s.tt=[];s.data=s.ins.map(()=>[]);},
+    major(s,t,u){s.tt.push(t);for(let k=0;k<u.length;k++)s.data[k].push(u[k]);},
+    icon:b=>{const m=6;const w=b.w-2*m,h=b.h-2*m-4;return `<rect x="${m}" y="${m}" width="${w}" height="${h}" class="bicon"/><polyline class="bicon" points="${m+2},${m+h-3} ${m+w*.35},${m+h*.35} ${m+w*.6},${m+h*.7} ${m+w-2},${m+3}"/><line class="bicon" x1="${b.w/2-4}" y1="${b.h-m}" x2="${b.w/2+4}" y2="${b.h-m}"/>`;}},
+  Display:{label:'Display',w:80,h:30,def:{Format:'short'},sink:true,
+    fields:[{k:'Format',l:'Number format',opts:[['short','Short (4 decimals)'],['long','Long (15 digits)']]}],
+    desc:'Shows the input’s value at the end of the simulation on the block.',
+    nIn:()=>1,nOut:()=>0,init(s){s.last=0;},major(s,t,u){s.last=u[0];},
+    icon:b=>{const v=results&&results.displays[b.id]!=null?fmtVal(results.displays[b.id],b.p.Format==='long'):'0';return `<rect x="4" y="4" width="${b.w-8}" height="${b.h-8}" class="bicon"/>`+TX(b.w/2,b.h/2,fit(v,b.w-8));}},
+  Integrator:{label:'Integrator',w:40,h:40,def:{InitialCondition:'0'},
+    fields:[{k:'InitialCondition',l:'Initial condition'}],desc:'Integrates its input over time: y = ∫u dt.',
+    nIn:()=>1,nOut:()=>1,init(s,E){s.nx=1;s.x0=[E.num('InitialCondition')];},
+    out:(s,t,u,X)=>X[s.xo],deriv(s,t,u,X,dX){dX[s.xo]=u[0];},icon:b=>frac(b.w,b.h,'1','s')},
+  Derivative:{label:'Derivative',w:40,h:40,def:{},fields:[],ft:true,
+    desc:'Numerically differentiates its input (slope between consecutive time steps).',
+    nIn:()=>1,nOut:()=>1,init(s){s.lu=0;s.lt=-Infinity;s.ld=0;},
+    out(s,t,u,X,major){if(major&&t>s.lt){const d=(u[0]-s.lu)/(t-s.lt);s.ld=isFinite(d)?d:0;}return s.ld;},
+    major(s,t,u){s.lu=u[0];s.lt=t;},icon:b=>frac(b.w,b.h,'du','dt')},
+  TransferFcn:{label:'Transfer Fcn',w:70,h:40,def:{Numerator:'[1]',Denominator:'[1 1]'},
+    fields:[{k:'Numerator',l:'Numerator coefficients',vec:true},{k:'Denominator',l:'Denominator coefficients',vec:true}],
+    desc:'Continuous-time transfer function. Enter coefficients in descending powers of s: [1 2 1] → s²+2s+1.',
+    nIn:()=>1,nOut:()=>1,ft:s=>s.b0!==0,
+    init(s,E){
+      const strip=a=>{a=a.slice();while(a.length>1&&a[0]===0)a.shift();return a;};
+      const num=strip(E.vec('Numerator')),den=strip(E.vec('Denominator'));
+      if(!den.length||den[0]===0)throw new Error('denominator cannot be zero');
+      if(num.length>den.length)throw new Error('numerator order cannot exceed denominator order');
+      const n=den.length-1,d0=den[0],a=den.map(v=>v/d0);
+      const b=new Array(n+1-num.length).fill(0).concat(num).map(v=>v/d0);
+      s.n=n;s.a=a;s.b0=b[0];s.c=[];for(let i=0;i<n;i++)s.c[i]=b[n-i]-a[n-i]*b[0];
+      s.nx=n;s.x0=new Array(n).fill(0);if(n)E.rate(Math.abs(a[1]));
+    },
+    out(s,t,u,X){let y=s.b0?s.b0*u[0]:0;for(let i=0;i<s.n;i++)y+=s.c[i]*X[s.xo+i];return y;},
+    deriv(s,t,u,X,dX){const n=s.n,o=s.xo;let acc=u[0];for(let i=0;i<n;i++)acc-=s.a[n-i]*X[o+i];for(let i=0;i<n-1;i++)dX[o+i]=X[o+i+1];dX[o+n-1]=acc;},
+    icon:b=>frac(b.w,b.h,polyText(b.p.Numerator),polyText(b.p.Denominator))},
+  TransportDelay:{label:'Transport Delay',w:60,h:40,def:{DelayTime:'1',InitialOutput:'0'},
+    fields:[{k:'DelayTime',l:'Time delay (s)'},{k:'InitialOutput',l:'Initial output'}],
+    desc:'Delays its input by the given time (dead time), using linear interpolation between stored points.',
+    nIn:()=>1,nOut:()=>1,ft:s=>s.L===0,
+    init(s,E){s.L=E.num('DelayTime');s.ic=E.num('InitialOutput');if(s.L<0)throw new Error('gecikme negatif olamaz');s.bt=[];s.bu=[];},
+    out(s,t,u){
+      if(s.L===0)return u[0];
+      const tau=t-s.L;if(tau<-1e-12)return s.ic;
+      const bt=s.bt,n=bt.length;if(!n)return s.ic;
+      if(tau>=bt[n-1])return s.bu[n-1];
+      let lo=0,hi=n-1;while(hi-lo>1){const m=(lo+hi)>>1;if(bt[m]<=tau)lo=m;else hi=m;}
+      if(tau<=bt[lo])return s.bu[lo];
+      const f=(tau-bt[lo])/(bt[hi]-bt[lo]);return s.bu[lo]+f*(s.bu[hi]-s.bu[lo]);
+    },
+    major(s,t,u){const n=s.bt.length;if(n&&s.bt[n-1]>=t)return;s.bt.push(t);s.bu.push(u[0]);},
+    icon:b=>`<text x="${b.w/2}" y="${b.h/2}" class="btext">e<tspan dy="-5" font-size="9">−s·${esc(fit(b.p.DelayTime,b.w-20))}</tspan></text>`},
+  PID:{label:'PID Controller',w:70,h:40,def:{Controller:'PID',Form:'Parallel',P:'1',I:'1',D:'0',N:'100'},
+    fields:[{k:'Controller',l:'Controller',opts:[['PID','PID'],['PI','PI'],['PD','PD'],['P','P'],['I','I']]},
+      {k:'Form',l:'Form',opts:[['Parallel','Parallel: P + I/s + D·N/(1+N/s)'],['Ideal','Ideal: P·(1 + I/s + D·N/(1+N/s))']]},
+      {k:'P',l:'Proportional (P)'},{k:'I',l:'Integral (I)'},{k:'D',l:'Derivative (D)'},{k:'N',l:'Filter coefficient (N)'}],
+    desc:'Continuous-time PID controller. The derivative term uses a first-order filter.',
+    nIn:()=>1,nOut:()=>1,ft:true,
+    init(s,E){const c=s.p.Controller||'PID';s.hp=c.startsWith('P');s.hi=c.includes('I');s.hd=c.includes('D');
+      s.P=E.num('P');s.I=s.hi?E.num('I'):0;s.D=s.hd?E.num('D'):0;s.N=s.hd?E.num('N'):0;s.ideal=s.p.Form==='Ideal';
+      s.nx=2;s.x0=[0,0];if(s.hd)E.rate(Math.abs(s.N));},
+    out(s,t,u,X){const e=u[0],xi=X[s.xo],xf=X[s.xo+1];const dt=s.hd?s.D*s.N*(e-xf):0,it=s.hi?s.I*xi:0;
+      return s.ideal?s.P*(e+it+dt):(s.hp?s.P*e:0)+it+dt;},
+    deriv(s,t,u,X,dX){const e=u[0];dX[s.xo]=e;dX[s.xo+1]=s.hd?s.N*(e-X[s.xo+1]):0;},
+    icon:b=>TX(b.w/2,b.h/2,fit((b.p.Controller||'PID')+'(s)',b.w))},
+  UnitDelay:{label:'Unit Delay',w:40,h:40,def:{InitialCondition:'0',SampleTime:'-1'},
+    fields:[{k:'InitialCondition',l:'Initial condition'},{k:'SampleTime',l:'Sample time (−1: solver step)'}],
+    desc:'Delays its input by one sample period: y[k] = u[k−1].',
+    nIn:()=>1,nOut:()=>1,init(s,E){s.st=E.num('InitialCondition');s.Ts=E.num('SampleTime');if(s.Ts>0)E.ts(s.Ts);s.has=false;},
+    finalize(s,h){if(!(s.Ts>0))s.Ts=h;},out:s=>s.st,
+    major(s,t,u){if(hit(t,s.Ts)){s.pend=u[0];s.has=true;}},post(s){if(s.has){s.st=s.pend;s.has=false;}},
+    icon:b=>frac(b.w,b.h,'1','z')},
+  ZOH:{label:'Zero-Order Hold',w:40,h:40,def:{SampleTime:'-1'},ft:true,
+    fields:[{k:'SampleTime',l:'Sample time (−1: solver step)'}],desc:'Samples its input at each sample hit and holds it until the next one.',
+    nIn:()=>1,nOut:()=>1,init(s,E){s.Ts=E.num('SampleTime');if(s.Ts>0)E.ts(s.Ts);s.held=0;},finalize(s,h){if(!(s.Ts>0))s.Ts=h;},
+    out(s,t,u,X,major){if(major&&hit(t,s.Ts))s.held=u[0];return s.held;},
+    icon:b=>plotIcon(b.w,b.h,[[0,.15],[.25,.15],[.25,.45],[.5,.45],[.5,.7],[.75,.7],[.75,.88],[1,.88]])},
+  Sum:{label:'Sum',w:26,h:26,def:{Inputs:'|++'},ft:true,
+    fields:[{k:'Inputs',l:'List of signs (e.g. |+-, ++-)',raw:true}],desc:'Adds or subtracts its inputs according to the signs. “|” only adds spacing.',
+    nIn:b=>sumSigns(b.p.Inputs).length,nOut:()=>1,init(s){s.sg=sumSigns(s.p.Inputs).map(c=>c==='+'?1:-1);},
+    out(s,t,u){let y=0;for(let k=0;k<u.length;k++)y+=s.sg[k]*u[k];return y;},
+    icon:b=>{const sg=sumSigns(b.p.Inputs),cx=b.w/2,cy=b.h/2;return sg.map((c,i)=>{const p=portLocal(b,'in',i);return TX(+(cx+(p.x-cx)*.5).toFixed(1),+(cy+(p.y-cy)*.5).toFixed(1),c==='+'?'+':'−','bsmall');}).join('');}},
+  Gain:{label:'Gain',w:40,h:40,def:{Gain:'1'},ft:true,fields:[{k:'Gain',l:'Gain'}],desc:'Multiplies its input by a constant: y = K·u.',
+    nIn:()=>1,nOut:()=>1,init(s,E){s.k=E.num('Gain');},out:(s,t,u)=>s.k*u[0],
+    icon:b=>TX(b.flip?b.w*.62:b.w*.38,b.h/2,fit(b.p.Gain,b.w*.7))},
+  Product:{label:'Product',w:40,h:40,def:{Inputs:'2'},ft:true,
+    fields:[{k:'Inputs',l:'Inputs (a number, or a string of * and /)',raw:true}],desc:'Multiplies and/or divides its inputs. Example: */ → u1/u2.',
+    nIn:b=>prodOps(b.p.Inputs).length,nOut:()=>1,init(s){s.ops=prodOps(s.p.Inputs);},
+    out(s,t,u){let y=1;for(let k=0;k<u.length;k++)y=s.ops[k]==='*'?y*u[k]:y/u[k];return y;},
+    icon:b=>{const ops=prodOps(b.p.Inputs);if(ops.every(o=>o==='*'))return TX(b.w/2,b.h/2,'×');return ops.map((o,i)=>{const p=portLocal(b,'in',i);return TX(p.x-p.dir*9,p.y,o==='*'?'×':'÷','bsmall');}).join('');}},
+  Abs:{label:'Abs',w:40,h:34,def:{},fields:[],ft:true,desc:'Outputs the absolute value of its input.',
+    nIn:()=>1,nOut:()=>1,init(){},out:(s,t,u)=>Math.abs(u[0]),icon:b=>TX(b.w/2,b.h/2,'|u|')},
+  Saturation:{label:'Saturation',w:40,h:40,def:{UpperLimit:'0.5',LowerLimit:'-0.5'},ft:true,
+    fields:[{k:'UpperLimit',l:'Upper limit'},{k:'LowerLimit',l:'Lower limit'}],desc:'Limits its input to the range between the lower and upper limits.',
+    nIn:()=>1,nOut:()=>1,init(s,E){s.hi=E.num('UpperLimit');s.lo=E.num('LowerLimit');if(s.lo>s.hi)throw new Error('lower limit cannot exceed upper limit');},
+    out:(s,t,u)=>Math.min(s.hi,Math.max(s.lo,u[0])),icon:b=>plotIcon(b.w,b.h,[[0,.15],[.33,.15],[.67,.85],[1,.85]])},
+  DeadZone:{label:'Dead Zone',w:40,h:40,def:{LowerValue:'-0.5',UpperValue:'0.5'},ft:true,
+    fields:[{k:'LowerValue',l:'Start of dead zone'},{k:'UpperValue',l:'End of dead zone'}],desc:'Outputs zero inside the dead zone; outside it, outputs the input shifted by the zone edge.',
+    nIn:()=>1,nOut:()=>1,init(s,E){s.lo=E.num('LowerValue');s.hi=E.num('UpperValue');},
+    out:(s,t,u)=>u[0]>s.hi?u[0]-s.hi:u[0]<s.lo?u[0]-s.lo:0,icon:b=>plotIcon(b.w,b.h,[[0,.1],[.38,.5],[.62,.5],[1,.9]])},
+  Switch:{label:'Switch',w:40,h:46,def:{Criteria:'u2 >= Threshold',Threshold:'0'},ft:true,
+    fields:[{k:'Criteria',l:'Criteria for passing u1',opts:[['u2 >= Threshold','u2 ≥ threshold'],['u2 > Threshold','u2 > threshold'],['u2 ~= 0','u2 ≠ 0']]},{k:'Threshold',l:'Threshold'}],
+    desc:'Passes the top input (u1) when the middle input (u2) meets the criteria, otherwise the bottom input (u3).',
+    nIn:()=>3,nOut:()=>1,init(s,E){s.th=E.num('Threshold');s.cr=s.p.Criteria;},
+    out(s,t,u){const c=s.cr==='u2 > Threshold'?u[1]>s.th:s.cr==='u2 ~= 0'?u[1]!==0:u[1]>=s.th;return c?u[0]:u[2];},
+    icon:b=>{const a=portLocal(b,'in',0),m=portLocal(b,'in',1),o=portLocal(b,'out',0);const px=b.w/2;return `<polyline class="bicon" points="${a.x},${a.y} ${px-4},${a.y} ${px+6},${o.y}"/><line class="bicon" x1="${px+6}" y1="${o.y}" x2="${o.x}" y2="${o.y}"/><line class="bicon" x1="${m.x}" y1="${m.y}" x2="${px-6}" y2="${m.y}" stroke-dasharray="2 2"/><circle class="bicon" cx="${px-4}" cy="${portLocal(b,'in',2).y}" r="1.6"/>`;}},
+  Fcn:{label:'Fcn',w:60,h:34,def:{Expr:'sin(u)'},ft:true,
+    fields:[{k:'Expr',l:'Expression (u: input, t: time)',expr:true}],desc:'Applies your own expression to the input, for example 2*u^2 + sin(t). Model variables can be used too.',
+    nIn:()=>1,nOut:()=>1,init(s,E){try{s.ast=parseExpr(s.p.Expr);}catch(e){throw new Error('ifade: '+e.message);}s.env=Object.assign({},E.ws);},
+    out(s,t,u){s.env.u=u[0];s.env.t=t;return scalar(evalAst(s.ast,s.env));},icon:b=>TX(b.w/2,b.h/2,'f(u)')},
+  Unknown:{label:'Unsupported',w:60,h:40,def:{},fields:[],desc:'',
+    nIn:b=>(b.ports&&b.ports[0])||0,nOut:b=>(b.ports&&b.ports[1])||0,
+    init(s){throw new Error(`block type “${s.p.BlockType}” is not supported yet`);},
+    icon:b=>TX(b.w/2,b.h/2,fit(b.p.BlockType||'?',b.w),'bsmall')},
+};
+const LIB=[
+  {cat:'Continuous',items:['Integrator','Derivative','TransferFcn','TransportDelay','PID'],open:true},
+  {cat:'Discontinuities',items:['Saturation','DeadZone']},
+  {cat:'Discrete',items:['UnitDelay','ZOH']},
+  {cat:'Math Operations',items:['Sum','Gain','Product','Abs']},
+  {cat:'Signal Routing',items:['Switch']},
+  {cat:'Sinks',items:['Scope','Display']},
+  {cat:'Sources',items:['Constant','Step','Sine','Ramp','Pulse','Clock']},
+  {cat:'User-Defined Functions',items:['Fcn']},
+];
+
+/* =====================================================================
+   3) Simulation engine (fixed-step ode4 / ode1)
+   ===================================================================== */
+class SimError extends Error{constructor(msg,ids){super(msg);this.ids=ids||[];}}
+const nInOf=b=>BLOCKS[b.type].nIn(b),nOutOf=b=>BLOCKS[b.type].nOut(b);
+function fieldLabel(type,k){const f=(BLOCKS[type].fields||[]).find(f=>f.k===k);return f?f.l:k;}
+function evalParam(str,ws){return evalAst(parseExpr(String(str)),ws);}
+
+function simulate(model){
+  const t0=performance.now();
+  let ws;try{ws=parseWorkspace(model.settings.ws);}catch(e){throw new SimError(e.message+' (Settings → variables)');}
+  let stop;try{stop=scalar(evalParam(model.settings.stop,ws));}catch(e){throw new SimError('Stop time: '+e.message);}
+  if(!(stop>0)||!isFinite(stop))throw new SimError('Stop time must be a positive number.');
+  if(!model.blocks.length)throw new SimError('The model is empty. Add some blocks first.');
+  const idx=new Map(model.blocks.map((b,i)=>[b.id,i]));
+  const S=model.blocks.map((b,i)=>({b,p:b.p,def:BLOCKS[b.type],i,ins:new Array(nInOf(b)).fill(-1),nx:0,xo:0,x0:[]}));
+  for(const l of model.lines){const si=idx.get(l.src.b),di=idx.get(l.dst.b);if(si==null||di==null)continue;if(l.dst.port<S[di].ins.length)S[di].ins[l.dst.port]=si;}
+  const warns=[];
+  for(const s of S)s.ins.forEach((v,k)=>{if(v<0)warns.push({id:s.b.id,msg:`input ${k+1} of “${s.b.name}” is unconnected and was treated as 0`});});
+  let minTs=Infinity,maxRate=0;
+  for(const s of S){
+    const E={ws,
+      num:k=>{let v;try{v=scalar(evalParam(s.p[k],ws));}catch(e){throw new Error(`${fieldLabel(s.b.type,k)}: ${e.message}`);}if(!isFinite(v))throw new Error(`${fieldLabel(s.b.type,k)}: must be a finite number`);return v;},
+      vec:k=>{let v;try{v=evalParam(s.p[k],ws);}catch(e){throw new Error(`${fieldLabel(s.b.type,k)}: ${e.message}`);}return Array.isArray(v)?v:[v];},
+      ts:v=>{minTs=Math.min(minTs,v);},rate:r=>{if(isFinite(r))maxRate=Math.max(maxRate,r);}};
+    try{s.def.init(s,E);}catch(e){throw new SimError(`“${s.b.name}”: ${e.message}`,[s.b.id]);}
+    s.ft=typeof s.def.ft==='function'?s.def.ft(s):!!s.def.ft;
+    s.u=new Float64Array(s.ins.length);
+  }
+  let h;
+  const stepSetting=String(model.settings.step||'auto').trim();
+  if(stepSetting==='auto'||stepSetting===''){
+    h=stop/1000;if(maxRate>0)h=Math.min(h,0.5/maxRate);
+    if(isFinite(minTs)){h=Math.min(h,minTs);h=minTs/Math.ceil(minTs/h-1e-9);}
+  }else{
+    try{h=scalar(evalParam(stepSetting,ws));}catch(e){throw new SimError('Step size: '+e.message);}
+    if(!(h>0))throw new SimError('Step size must be positive.');
+  }
+  const N=Math.round(stop/h);
+  if(N>400000)throw new SimError(`Too many steps (${N.toLocaleString('en-US')}). Shorten the stop time or increase the step size.`);
+  for(const s of S)if(s.def.finalize)s.def.finalize(s,h);
+  // execution order (direct-feedthrough blocks after their sources)
+  const n=S.length,indeg=new Array(n).fill(0),outs=Array.from({length:n},()=>[]);
+  for(const d of S)if(d.ft)for(const si of d.ins)if(si>=0){indeg[d.i]++;outs[si].push(d.i);}
+  const order=[],q=[];for(let i=0;i<n;i++)if(!indeg[i])q.push(i);
+  while(q.length){const i=q.shift();order.push(i);for(const j of outs[i])if(--indeg[j]===0)q.push(j);}
+  if(order.length<n){const loop=S.filter(s=>indeg[s.i]>0);throw new SimError(`Algebraic loop: ${loop.map(s=>'“'+s.b.name+'”').join(', ')}. Add an Integrator, Unit Delay or Transport Delay to the loop.`,loop.map(s=>s.b.id));}
+  let nx=0;for(const s of S){if(s.nx){s.xo=nx;nx+=s.nx;}}
+  const X=new Float64Array(nx);for(const s of S)for(let k=0;k<s.nx;k++)X[s.xo+k]=s.x0[k]||0;
+  const SX=S.filter(s=>s.nx>0),SM=S.filter(s=>s.def.major),SP=S.filter(s=>s.def.post);
+  const Y=new Float64Array(n);
+  const gather=s=>{const u=s.u;for(let k=0;k<s.ins.length;k++){const si=s.ins[k];u[k]=si>=0?Y[si]:0;}};
+  const outputs=(t,Xc,major)=>{for(const i of order){const s=S[i];gather(s);if(s.def.out)Y[i]=s.def.out(s,t,s.u,Xc,major);}};
+  const derivs=(t,Xc,dX)=>{outputs(t,Xc,false);for(const s of SX){gather(s);s.def.deriv(s,t,s.u,Xc,dX);}};
+  const k1=new Float64Array(nx),k2=new Float64Array(nx),k3=new Float64Array(nx),k4=new Float64Array(nx),Xt=new Float64Array(nx);
+  const ode1=model.settings.solver==='ode1';
+  for(let k=0;k<=N;k++){
+    const t=k===N?stop:k*h;
+    outputs(t,X,true);
+    for(let i=0;i<n;i++)if(!isFinite(Y[i])){const s=S[i];throw new SimError(`Numerical error: the output of “${s.b.name}” became infinite or undefined at t = ${fmtVal(t)} s. The system may be unstable, or the step size too large.`,[s.b.id]);}
+    for(const s of SM){gather(s);s.def.major(s,t,s.u);}
+    if(k===N)break;
+    const hk=(k===N-1)?stop-t:h;
+    if(nx){
+      if(ode1){derivs(t,X,k1);for(let i=0;i<nx;i++)X[i]+=hk*k1[i];}
+      else{
+        derivs(t,X,k1);for(let i=0;i<nx;i++)Xt[i]=X[i]+hk/2*k1[i];
+        derivs(t+hk/2,Xt,k2);for(let i=0;i<nx;i++)Xt[i]=X[i]+hk/2*k2[i];
+        derivs(t+hk/2,Xt,k3);for(let i=0;i<nx;i++)Xt[i]=X[i]+hk*k3[i];
+        derivs(t+hk,Xt,k4);for(let i=0;i<nx;i++)X[i]+=hk/6*(k1[i]+2*k2[i]+2*k3[i]+k4[i]);
+      }
+    }
+    for(const s of SP)s.def.post(s);
+  }
+  const res={stop,h,N,ms:performance.now()-t0,scopes:{},displays:{},warns};
+  for(const s of S){
+    if(s.b.type==='Scope')res.scopes[s.b.id]={t:s.tt,ys:s.data,labels:s.ins.map((si,k)=>si>=0?S[si].b.name.replace(/\s+/g,' '):`u${k+1}`)};
+    if(s.b.type==='Display')res.displays[s.b.id]=s.last;
+  }
+  return res;
+}
+
+/* =====================================================================
+   4) Model state, undo, persistence
+   ===================================================================== */
+const STORE='simuwire:model:v1';
+let model,results=null,sel=new Set(),selLine=null,errIds=new Set(),undoStack=[];
+const view={x:40,y:40,k:1};
+let uidN=1;const uid=p=>(p||'b')+(Date.now().toString(36))+(uidN++);
+const getB=id=>model.blocks.find(b=>b.id===id);
+const emptyModel=()=>({blocks:[],lines:[],settings:{stop:'10',solver:'ode4',step:'auto',ws:'',name:'untitled'}});
+function pushUndo(){undoStack.push(JSON.stringify(model));if(undoStack.length>80)undoStack.shift();}
+function undo(){if(!undoStack.length){setStatus('Nothing to undo.');return;}model=JSON.parse(undoStack.pop());sel.clear();selLine=null;syncStop();save();render();setStatus('Undone.');}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(model));}catch(e){}}
+function load(){try{const s=localStorage.getItem(STORE)||localStorage.getItem('bloklab:model:v1');if(s){const m=JSON.parse(s);if(m&&Array.isArray(m.blocks)&&Array.isArray(m.lines)){m.settings=Object.assign(emptyModel().settings,m.settings||{});return m;}}}catch(e){}return null;}
+function uniqueName(base){const names=new Set(model.blocks.map(b=>b.name));if(!names.has(base))return base;let i=1;while(names.has(base+i))i++;return base+i;}
+const snap=v=>Math.round(v/5)*5;
+
+function exampleModel(){
+  const m=emptyModel();m.settings.ws='K = 1;\nT = 1;\nL = 1;';m.settings.name='FOPDT_PID_example';
+  const add=(type,name,x,y,w,h,p)=>{const d=BLOCKS[type];const b={id:uid(),type,name,x,y,w:w||d.w,h:h||d.h,p:Object.assign({...d.def},p||{}),flip:false};m.blocks.push(b);return b;};
+  const ln=(a,b,port)=>m.lines.push({id:uid('l'),src:{b:a.id,port:0},dst:{b:b.id,port:port||0}});
+  const pid={Controller:'PI',P:'0.833158676135846',I:'0.600306598212093'};
+  for(const [dy,delay] of [[0,true],[190,false]]){
+    const sfx=dy?'1':'';
+    const c=add('Constant','setpoint'+sfx,30,63+dy,50,30);
+    const s=add('Sum','Sum'+sfx,125,65+dy,26,26,{Inputs:'|+-'});
+    const p=add('PID','PID Controller'+sfx,190,58+dy,70,40,pid);
+    const tf=add('TransferFcn','Transfer Fcn'+sfx,305,58+dy,70,40,{Numerator:'[K]',Denominator:'[T 1]'});
+    let last=tf;
+    if(delay){last=add('TransportDelay','Transport Delay',420,58+dy,60,40,{DelayTime:'L'});}
+    const sc=add('Scope','Scope'+sfx,545,60+dy,36,36);
+    ln(c,s,0);ln(s,p);ln(p,tf);if(delay)ln(tf,last);ln(last,sc);ln(last,s,1);
+  }
+  return m;
+}
+
+/* =====================================================================
+   5) Rendering
+   ===================================================================== */
+const $=s=>document.querySelector(s);
+const svg=$('#canvas'),world=$('#world'),LW=$('#wires'),LB=$('#blocks'),TMP=$('#temp');
+// Round Sum: with a “|” in the sign list, slots are spread from top (90°) through left (180°) to bottom (270°),
+// so “|+-” puts + on the left and − at the bottom.
+function sumInputSlot(b,i){
+  const s=String(b.p.Inputs??'').trim();
+  const chars=/^\d+$/.test(s)?[]:s.split('').filter(c=>c==='+'||c==='-'||c==='|').slice(0,12);
+  if(!chars.includes('|')||chars.length<2)return null;
+  const idx=[];chars.forEach((c,k)=>{if(c!=='|')idx.push(k);});
+  if(i>=idx.length)return null;
+  const th=(90+180*idx[i]/(chars.length-1))*Math.PI/180;
+  const r=b.w/2,c=Math.cos(th)*(b.flip?-1:1),sn=Math.sin(th);
+  const x=r+r*c,y=b.h/2-r*sn;
+  if(Math.abs(c)>=Math.abs(sn)-1e-9)return{x,y,dir:c<0?-1:1,v:0};
+  return{x,y,dir:0,v:sn>0?-1:1};
+}
+function portLocal(b,kind,i){
+  if(b.type==='Sum'&&kind==='in'){const sl=sumInputSlot(b,i);if(sl)return sl;}
+  const n=kind==='in'?nInOf(b):nOutOf(b);
+  const left=(kind==='in')!==!!b.flip;
+  const y=b.h*(i+1)/(n+1);let x=left?0:b.w;
+  if(b.type==='Sum'){const r=b.w/2,dy=y-b.h/2,dx=Math.sqrt(Math.max(0,r*r-dy*dy));x=left?r-dx:r+dx;}
+  if(b.type==='Gain'&&kind==='out')x=left?0:b.w;
+  return{x,y,dir:left?-1:1,v:0};
+}
+function portPos(b,kind,i){const p=portLocal(b,kind,i);return{x:b.x+p.x,y:b.y+p.y,dir:p.dir,v:p.v||0};}
+function route(a,bp,sb,db){
+  if(bp.v){
+    const G=14,ey=bp.y+bp.v*G;
+    if((a.y-ey)*bp.v>=0&&(bp.x-a.x)*a.dir>=G)return[[a.x,a.y],[bp.x,a.y],[bp.x,bp.y]];
+    const sx=a.x+a.dir*G;
+    const ym=bp.v>0?Math.max(sb.y+sb.h,db.y+db.h,a.y)+26:Math.min(sb.y,db.y,a.y)-26;
+    return[[a.x,a.y],[sx,a.y],[sx,ym],[bp.x,ym],[bp.x,bp.y]];
+  }
+  const d1=a.dir,d2=-bp.dir,G=14;
+  const sx=a.x+d1*G,ex=bp.x-d2*G;
+  if(d1===d2){
+    if((ex-sx)*d1>=0){
+      if(Math.abs(a.y-bp.y)<.5)return[[a.x,a.y],[bp.x,bp.y]];
+      const mx=Math.round((a.x+bp.x)/2);
+      return[[a.x,a.y],[mx,a.y],[mx,bp.y],[bp.x,bp.y]];
+    }
+    let ym;const sB=sb.y+sb.h,dB=db.y+db.h;
+    if(db.y>sB+24)ym=(sB+db.y)/2;else if(sb.y>dB+24)ym=(dB+sb.y)/2;else ym=Math.max(sB,dB)+26;
+    return[[a.x,a.y],[sx,a.y],[sx,ym],[ex,ym],[ex,bp.y],[bp.x,bp.y]];
+  }
+  const xc=d1===1?Math.max(sx,ex):Math.min(sx,ex);
+  return[[a.x,a.y],[xc,a.y],[xc,bp.y],[bp.x,bp.y]];
+}
+function linePoints(l){
+  const sb=getB(l.src.b),db=getB(l.dst.b);if(!sb||!db)return null;
+  if(l.src.port>=nOutOf(sb)||l.dst.port>=nInOf(db))return null;
+  const a=portPos(sb,'out',l.src.port),b=portPos(db,'in',l.dst.port);
+  // A hand-routed line keeps its inner corners; the segments touching the ports follow the blocks.
+  if(Array.isArray(l.pts)&&l.pts.length&&(b.v||l.pts.length>=2)){
+    const P=[[a.x,a.y],...l.pts.map(p=>[p[0],p[1]]),[b.x,b.y]],n=P.length;
+    P[1][1]=a.y;
+    if(b.v)P[n-2][0]=b.x;else P[n-2][1]=b.y;
+    return simplifyPts(P);
+  }
+  return route(a,b,sb,db);
+}
+function simplifyPts(P){
+  const out=[P[0]];
+  for(let i=1;i<P.length;i++)out.push(P[i]);
+  let changed=true;
+  while(changed){changed=false;
+    for(let i=1;i<out.length-1;i++){const p=out[i-1],q=out[i],r=out[i+1];
+      const same=Math.abs(p[0]-q[0])<.5&&Math.abs(p[1]-q[1])<.5;
+      const colX=Math.abs(p[0]-q[0])<.5&&Math.abs(q[0]-r[0])<.5,colY=Math.abs(p[1]-q[1])<.5&&Math.abs(q[1]-r[1])<.5;
+      if(same||colX||colY){out.splice(i,1);changed=true;break;}}}
+  return out;
+}
+// Move segment i of polyline P0 to coordinate val (x for a vertical segment, y for a horizontal one).
+// Segments touching a port get a short stub so the port end stays put.
+function moveSegment(P0,i,val,a,b){
+  const P=P0.map(p=>p.slice());
+  const p0=P0[i],p1=P0[i+1],vert=Math.abs(p0[0]-p1[0])<.5;
+  const G=14;
+  if(i===P.length-2){const e=b.v?[b.x,b.y+b.v*G]:[b.x+b.dir*G,b.y];P.splice(P.length-1,0,e.slice(),e.slice());}
+  if(i===0){const s=[a.x+a.dir*G,a.y];P.splice(1,0,s.slice(),s.slice());i+=2;}
+  if(vert){P[i][0]=val;P[i+1][0]=val;}else{P[i][1]=val;P[i+1][1]=val;}
+  return simplifyPts(P);
+}
+const ptsStr=pts=>pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+function blockGraphic(b){
+  const d=BLOCKS[b.type];let shape;
+  if(b.type==='Sum'){const r=b.w/2;shape=`<circle cx="${r+2}" cy="${r+2}" r="${r}" class="bshadow"/><circle cx="${r}" cy="${r}" r="${r}" class="bshape"/>`;}
+  else if(b.type==='Gain'){const pts=b.flip?`${b.w},0 ${b.w},${b.h} 0,${b.h/2}`:`0,0 0,${b.h} ${b.w},${b.h/2}`;
+    shape=`<polygon points="${pts}" class="bshadow" transform="translate(2,2)"/><polygon points="${pts}" class="bshape"/>`;}
+  else shape=`<rect x="2.5" y="2.5" width="${b.w}" height="${b.h}" class="bshadow"/><rect width="${b.w}" height="${b.h}" class="bshape"/>`;
+  let icon='';try{icon=d.icon(b);}catch(e){icon=TX(b.w/2,b.h/2,'?');}
+  return shape+icon;
+}
+function render(){
+  world.setAttribute('transform',`translate(${view.x},${view.y}) scale(${view.k})`);
+  $('#zoomLbl').textContent=Math.round(view.k*100)+'%';
+  const connIn=new Set(),connOut=new Set();
+  let wires='';
+  for(const l of model.lines){
+    const pts=linePoints(l);if(!pts)continue;
+    connIn.add(l.dst.b+':'+l.dst.port);connOut.add(l.src.b+':'+l.src.port);
+    const s=selLine===l.id;
+    const hits=pts.slice(0,-1).map((p,k)=>{const q=pts[k+1],v=Math.abs(p[0]-q[0])<.5;return `<line class="whit ${v?'sv':'sh'}" data-seg="${k}" x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${q[0].toFixed(1)}" y2="${q[1].toFixed(1)}"/>`;}).join('');
+    wires+=`<g data-line="${l.id}"><polyline class="wire${s?' sel':''}" points="${ptsStr(pts)}" marker-end="url(#${s?'arrsel':'arr'})"/>${hits}</g>`;
+  }
+  // branch points: several lines leaving the same output
+  const bySrc={};for(const l of model.lines){const k=l.src.b+':'+l.src.port;(bySrc[k]=bySrc[k]||[]).push(l);}
+  for(const k in bySrc){if(bySrc[k].length<2)continue;const l=bySrc[k][0];const sb=getB(l.src.b);if(!sb)continue;const p=portPos(sb,'out',l.src.port);wires+=`<circle class="bdot" cx="${p.x+p.dir*8}" cy="${p.y}" r="2.6"/>`;}
+  LW.innerHTML=wires;
+  let blocks='';
+  for(const b of model.blocks){
+    const cls=['blk'];if(sel.has(b.id))cls.push('sel');if(errIds.has(b.id))cls.push('err');if(b.type==='Unknown')cls.push('unknown');
+    let ports='';
+    const ni=nInOf(b),no=nOutOf(b);
+    for(let i=0;i<ni;i++){const p=portLocal(b,'in',i);const conn=connIn.has(b.id+':'+i);
+      if(p.v){
+        if(!conn)ports+=`<polyline class="port" points="${p.x-4},${p.y+p.v*7} ${p.x},${p.y+p.v*2} ${p.x+4},${p.y+p.v*7}"/>`;
+        ports+=`<circle class="phit" data-port="in:${i}" data-bid="${b.id}" cx="${p.x}" cy="${p.y+p.v*5}" r="7"/>`;continue;}
+      if(!conn)ports+=`<polyline class="port" points="${p.x+p.dir*7},${p.y-4} ${p.x+p.dir*2},${p.y} ${p.x+p.dir*7},${p.y+4}"/>`;
+      ports+=`<circle class="phit" data-port="in:${i}" data-bid="${b.id}" cx="${p.x+p.dir*5}" cy="${p.y}" r="7"/>`;}
+    for(let i=0;i<no;i++){const p=portLocal(b,'out',i);const conn=connOut.has(b.id+':'+i);
+      if(!conn)ports+=`<polyline class="port" points="${p.x+p.dir*2},${p.y-4} ${p.x+p.dir*7},${p.y} ${p.x+p.dir*2},${p.y+4}"/>`;
+      ports+=`<circle class="phit" data-port="out:${i}" data-bid="${b.id}" cx="${p.x+p.dir*5}" cy="${p.y}" r="7"/>`;}
+    const lines=String(b.name).split('\n');
+    const name=`<text class="bname" x="${b.w/2}" y="${b.h+14}">${lines.map((s,i)=>`<tspan x="${b.w/2}" dy="${i?13:0}">${esc(s)}</tspan>`).join('')}</text>`;
+    blocks+=`<g class="${cls.join(' ')}" data-id="${b.id}" transform="translate(${b.x},${b.y})">${blockGraphic(b)}${name}${ports}</g>`;
+  }
+  LB.innerHTML=blocks;
+  $('#empty').hidden=model.blocks.length>0;
+  updateSolverInfo();
+}
+function applyView(){world.setAttribute('transform',`translate(${view.x},${view.y}) scale(${view.k})`);$('#zoomLbl').textContent=Math.round(view.k*100)+'%';}
+function updateSolverInfo(){
+  const s=model.settings;let txt=`Solver: ${s.solver==='ode1'?'ode1 (Euler)':'ode4 (Runge–Kutta)'}, step: ${s.step==='auto'||!s.step?'auto':s.step}`;
+  if(results)txt+=`, last run: ${results.N.toLocaleString('en-US')} steps in ${Math.max(1,Math.round(results.ms))} ms`;
+  $('#solverInfo').textContent=txt;
+}
+function setStatus(msg,kind){const m=$('#msg');m.textContent=msg;m.className=kind||'';m.title=msg;}
+
+/* =====================================================================
+   6) Interaction: select, move, connect, pan
+   ===================================================================== */
+function toWorld(cx,cy){const r=svg.getBoundingClientRect();return{x:(cx-r.left-view.x)/view.k,y:(cy-r.top-view.y)/view.k};}
+let drag=null,lastTap={id:null,t:0},lastLineTap={id:null,t:0};
+function findPortAt(w,kind,excludeId){
+  let best=null,bd=18/view.k;
+  for(const b of model.blocks){if(b.id===excludeId)continue;const n=kind==='in'?nInOf(b):nOutOf(b);
+    for(let i=0;i<n;i++){const p=portPos(b,kind,i);const d=Math.hypot(p.x-w.x,p.y-w.y);if(d<bd){bd=d;best={b:b.id,port:i};}}}
+  if(best)return best;
+  for(const b of model.blocks){if(b.id===excludeId)continue;
+    if(w.x>=b.x&&w.x<=b.x+b.w&&w.y>=b.y&&w.y<=b.y+b.h){const n=kind==='in'?nInOf(b):nOutOf(b);if(!n)return null;
+      for(let i=0;i<n;i++){const used=kind==='in'?model.lines.some(l=>l.dst.b===b.id&&l.dst.port===i):false;if(!used)return{b:b.id,port:i};}
+      let bi=0,bd2=Infinity;for(let i=0;i<n;i++){const p=portPos(b,kind,i);const d=Math.abs(p.y-w.y);if(d<bd2){bd2=d;bi=i;}}return{b:b.id,port:bi};}}
+  return null;
+}
+function connect(src,dst){
+  pushUndo();
+  model.lines=model.lines.filter(l=>!(l.dst.b===dst.b&&l.dst.port===dst.port));
+  model.lines.push({id:uid('l'),src:{b:src.b,port:src.port},dst:{b:dst.b,port:dst.port}});
+  save();
+}
+function drawTemp(from,to,fromDir){
+  const pts=from.v?[[from.x,from.y],[from.x,from.y+from.v*10],[to.x,from.y+from.v*10],[to.x,to.y]]
+    :[[from.x,from.y],[from.x+fromDir*10,from.y],[from.x+fromDir*10,to.y],[to.x,to.y]];
+  TMP.innerHTML=`<polyline class="wtemp" points="${ptsStr(pts)}"/>`;
+}
+svg.addEventListener('pointerdown',e=>{
+  if(e.button!==0&&e.button!==1)return;
+  const w=toWorld(e.clientX,e.clientY);
+  svg.setPointerCapture(e.pointerId);
+  if(e.button===1){drag={mode:'pan',sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y,moved:true};svg.classList.add('panning');return;}
+  const portEl=e.target.closest('[data-port]');
+  if(portEl){
+    const [kind,i]=portEl.dataset.port.split(':');const bid=portEl.dataset.bid;
+    if(kind==='out'){drag={mode:'wire',src:{b:bid,port:+i}};return;}
+    drag={mode:'wirerev',dst:{b:bid,port:+i}};return;
+  }
+  const wireEl=e.target.closest('[data-line]');
+  if(wireEl){drag={mode:'linepress',id:wireEl.dataset.line,sx:e.clientX,sy:e.clientY,seg:+(e.target.dataset.seg||0),branch:e.ctrlKey||e.altKey||e.metaKey};return;}
+  const blkEl=e.target.closest('.blk');
+  if(blkEl){
+    const id=blkEl.dataset.id;
+    if(e.shiftKey||e.ctrlKey||e.metaKey){if(sel.has(id))sel.delete(id);else sel.add(id);}
+    else if(!sel.has(id))sel=new Set([id]);
+    selLine=null;
+    drag={mode:'move',id,start:w,sx:e.clientX,sy:e.clientY,moved:false,orig:new Map([...sel].map(i=>{const b=getB(i);return[i,{x:b.x,y:b.y}];}))};
+    render();return;
+  }
+  drag={mode:'pan',sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y,moved:false};
+});
+svg.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const w=toWorld(e.clientX,e.clientY);
+  if(drag.mode==='move'){
+    if(!drag.moved&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<3)return;
+    if(!drag.moved){pushUndo();drag.moved=true;}
+    const dx=w.x-drag.start.x,dy=w.y-drag.start.y;
+    for(const [id,o] of drag.orig){const b=getB(id);if(b){b.x=snap(o.x+dx);b.y=snap(o.y+dy+b.h/2)-b.h/2;}}
+    alignToNeighbours(drag);
+    render();
+  }else if(drag.mode==='pan'){
+    const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;
+    if(!drag.moved&&Math.hypot(dx,dy)<3)return;
+    drag.moved=true;svg.classList.add('panning');view.x=drag.vx+dx;view.y=drag.vy+dy;applyView();
+  }else if(drag.mode==='linepress'){
+    if(Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)>4){
+      const l=model.lines.find(l=>l.id===drag.id);
+      if(l&&drag.branch)drag={mode:'wire',src:{...l.src}};
+      else if(l){const P0=linePoints(l);const sb=getB(l.src.b),db=getB(l.dst.b);
+        if(P0&&drag.seg<P0.length-1){pushUndo();selLine=l.id;sel.clear();
+          drag={mode:'seg',id:l.id,P0,i:drag.seg,vert:Math.abs(P0[drag.seg][0]-P0[drag.seg+1][0])<.5,a:portPos(sb,'out',l.src.port),b:portPos(db,'in',l.dst.port)};}
+        else drag=null;}
+    }
+  }
+  if(drag&&drag.mode==='seg'){
+    const l=model.lines.find(l=>l.id===drag.id);
+    if(l){const val=snap(drag.vert?w.x:w.y);const P=moveSegment(drag.P0,drag.i,val,drag.a,drag.b);
+      const inner=P.slice(1,-1).map(p=>[Math.round(p[0]*10)/10,Math.round(p[1]*10)/10]);
+      if(inner.length&&(drag.b.v||inner.length>=2))l.pts=inner;else delete l.pts;render();}
+    return;
+  }
+  if(!drag)return;
+  if(drag.mode==='wire'){
+    const sb=getB(drag.src.b);if(!sb)return;const p=portPos(sb,'out',drag.src.port);
+    drawTemp(p,w,p.dir);highlightCand(findPortAt(w,'in',drag.src.b),'in');
+  }else if(drag.mode==='wirerev'){
+    const db=getB(drag.dst.b);if(!db)return;const p=portPos(db,'in',drag.dst.port);
+    drawTemp(p,w,p.dir);highlightCand(findPortAt(w,'out',drag.dst.b),'out');
+  }
+});
+function highlightCand(c,kind){
+  LB.querySelectorAll('.phit.cand').forEach(el=>el.classList.remove('cand'));
+  if(c){const el=LB.querySelector(`.phit[data-bid="${c.b}"][data-port="${kind}:${c.port}"]`);if(el)el.classList.add('cand');}
+}
+function endDrag(e){
+  if(!drag)return;
+  const w=toWorld(e.clientX,e.clientY);const d=drag;drag=null;svg.classList.remove('panning');TMP.innerHTML='';
+  if(d.mode==='move'){
+    if(d.moved){save();return;}
+    const now=performance.now();
+    if(lastTap.id===d.id&&now-lastTap.t<380){lastTap={id:null,t:0};openBlock(d.id);}
+    else lastTap={id:d.id,t:now};
+  }else if(d.mode==='wire'){
+    const t=findPortAt(w,'in',d.src.b);if(t){connect(d.src,t);setStatus('Connection added.');}render();
+  }else if(d.mode==='wirerev'){
+    const s=findPortAt(w,'out',d.dst.b);if(s){connect(s,d.dst);setStatus('Connection added.');}render();
+  }else if(d.mode==='pan'){
+    if(!d.moved){sel.clear();selLine=null;render();}
+  }else if(d.mode==='seg'){
+    save();render();setStatus('Line moved. Double-click a line to return it to automatic routing.');
+  }else if(d.mode==='linepress'){
+    const now=performance.now();
+    if(lastLineTap.id===d.id&&now-lastLineTap.t<380){
+      const l=model.lines.find(l=>l.id===d.id);
+      if(l&&l.pts){pushUndo();delete l.pts;save();setStatus('Line returned to automatic routing.');}
+      lastLineTap={id:null,t:0};
+    }else{lastLineTap={id:d.id,t:now};setStatus('Drag a line segment to move it. Ctrl+drag to branch, Delete to remove.');}
+    selLine=d.id;sel.clear();render();
+  }
+}
+svg.addEventListener('pointerup',endDrag);
+svg.addEventListener('pointercancel',endDrag);
+svg.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0015)));},{passive:false});
+function zoomAt(cx,cy,f){
+  const r=svg.getBoundingClientRect();const k=Math.min(4,Math.max(0.2,view.k*f));f=k/view.k;
+  const px=cx-r.left,py=cy-r.top;view.x=px-(px-view.x)*f;view.y=py-(py-view.y)*f;view.k=k;applyView();
+}
+function zoomCenter(f){const r=svg.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,f);}
+function fitView(){
+  if(!model.blocks.length){view.x=40;view.y=40;view.k=1;applyView();return;}
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  for(const b of model.blocks){x0=Math.min(x0,b.x);y0=Math.min(y0,b.y);x1=Math.max(x1,b.x+b.w);y1=Math.max(y1,b.y+b.h+18);}
+  for(const l of model.lines){const p=linePoints(l);if(p)for(const q of p){x0=Math.min(x0,q[0]);x1=Math.max(x1,q[0]);y0=Math.min(y0,q[1]);y1=Math.max(y1,q[1]);}}
+  const r=svg.getBoundingClientRect();const pad=40;
+  const k=Math.min(1.3,Math.max(0.2,Math.min((r.width-2*pad)/(x1-x0||1),(r.height-2*pad)/(y1-y0||1))));
+  view.k=k;view.x=(r.width-(x1-x0)*k)/2-x0*k;view.y=(r.height-(y1-y0)*k)/2-y0*k;applyView();
+}
+// While a block is dragged, snap it vertically so one of its connections becomes a straight line
+// when it is already within a few pixels of straight.
+function alignToNeighbours(d){
+  const pb=getB(d.id);if(!pb)return;
+  const tol=8/view.k;let best=null;
+  for(const l of model.lines){
+    let mine,other;
+    if(l.src.b===pb.id&&!d.orig.has(l.dst.b)){const ob=getB(l.dst.b);if(!ob||l.dst.port>=nInOf(ob))continue;
+      mine=portPos(pb,'out',l.src.port);other=portPos(ob,'in',l.dst.port);if(other.v)continue;}
+    else if(l.dst.b===pb.id&&!d.orig.has(l.src.b)){const ob=getB(l.src.b);if(!ob||l.dst.port>=nInOf(pb))continue;
+      mine=portPos(pb,'in',l.dst.port);if(mine.v)continue;other=portPos(ob,'out',l.src.port);}
+    else continue;
+    const dd=other.y-mine.y;
+    if(Math.abs(dd)<=0.01)return;
+    if(Math.abs(dd)<=tol&&(best===null||Math.abs(dd)<Math.abs(best)))best=dd;
+  }
+  if(best!==null)for(const id of d.orig.keys()){const b=getB(id);if(b)b.y+=best;}
+}
+function deleteSelection(){
+  if(selLine){pushUndo();model.lines=model.lines.filter(l=>l.id!==selLine);selLine=null;save();render();setStatus('Connection deleted.');return;}
+  if(!sel.size)return;
+  pushUndo();const n=sel.size;
+  model.blocks=model.blocks.filter(b=>!sel.has(b.id));
+  model.lines=model.lines.filter(l=>!sel.has(l.src.b)&&!sel.has(l.dst.b));
+  for(const id of sel){const w=scopeWins.get(id);if(w)w.el.remove(),scopeWins.delete(id);}
+  sel.clear();save();render();setStatus(n>1?`${n} blocks deleted.`:'Block deleted.');
+}
+function flipSelection(){if(!sel.size)return;pushUndo();for(const id of sel){const b=getB(id);if(b)b.flip=!b.flip;}
+  for(const l of model.lines)if(sel.has(l.src.b)||sel.has(l.dst.b))delete l.pts;save();render();}
+document.addEventListener('keydown',e=>{
+  const tag=(e.target.tagName||'').toLowerCase();
+  if(e.key==='Escape'){if(document.querySelector('.menu')){closeMenu();$('#btnExample').focus();return;}const d=document.querySelector('.dlg-back');if(d){d.remove();return;}sel.clear();selLine=null;render();return;}
+  if(tag==='input'||tag==='textarea'||tag==='select'||document.querySelector('.dlg-back'))return;
+  const mod=e.ctrlKey||e.metaKey;
+  if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();deleteSelection();}
+  else if(mod&&e.key.toLowerCase()==='z'){e.preventDefault();undo();}
+  else if(mod&&e.key.toLowerCase()==='i'){e.preventDefault();flipSelection();}
+  else if(mod&&e.key.toLowerCase()==='t'){e.preventDefault();run();}
+  else if(mod&&e.key.toLowerCase()==='s'){e.preventDefault();saveFile();}
+  else if(mod&&e.key.toLowerCase()==='a'){e.preventDefault();sel=new Set(model.blocks.map(b=>b.id));render();}
+  else if(e.key===' '){e.preventDefault();fitView();}
+  else if(e.key==='Enter'&&sel.size===1){e.preventDefault();openBlock([...sel][0]);}
+});
+
+/* ------------------------- library ------------------------------- */
+function miniIcon(type){
+  const d=BLOCKS[type];const b={type,w:d.w,h:d.h,p:{...d.def},flip:false,id:'_'};
+  const pad=4;return `<svg viewBox="${-pad} ${-pad} ${d.w+2*pad+3} ${d.h+2*pad+3}" aria-hidden="true">${blockGraphic(b)}</svg>`;
+}
+function buildLibrary(filter){
+  const tree=$('#tree');const f=(filter||'').trim().toLowerCase();
+  if(f){
+    const seen=new Set(),items=[];
+    for(const c of LIB)for(const t of c.items)if(!seen.has(t)&&(BLOCKS[t].label.toLowerCase().includes(f)||c.cat.toLowerCase().includes(f))){seen.add(t);items.push(t);}
+    tree.innerHTML=items.length?`<div class="cat open"><div class="cat-items">${items.map(libItem).join('')}</div></div>`:`<p style="padding:8px 12px;color:var(--muted)">No blocks match “${esc(filter)}”.</p>`;
+    return;
+  }
+  tree.innerHTML=`<div class="cat open"><button class="cat-head root-head" data-toggle><span class="chev"></span>Block library</button><div class="cat-items">`+
+    LIB.map(c=>`<div class="cat${c.open?' open':''}" style="padding-left:12px"><button class="cat-head" data-toggle aria-expanded="${!!c.open}"><span class="chev"></span>${esc(c.cat)}</button><div class="cat-items">${c.items.map(libItem).join('')}</div></div>`).join('')+`</div></div>`;
+}
+const libItem=t=>`<button class="lib-item" data-type="${t}" title="${esc(BLOCKS[t].desc)}">${miniIcon(t)}<span>${esc(BLOCKS[t].label)}</span></button>`;
+$('#tree').addEventListener('click',e=>{const h=e.target.closest('[data-toggle]');if(h){const c=h.parentElement;c.classList.toggle('open');h.setAttribute('aria-expanded',c.classList.contains('open'));}});
+$('#libSearch').addEventListener('input',e=>buildLibrary(e.target.value));
+let libDrag=null,addCount=0;
+$('#tree').addEventListener('pointerdown',e=>{
+  const it=e.target.closest('.lib-item');if(!it||e.button!==0)return;
+  e.preventDefault();libDrag={type:it.dataset.type,sx:e.clientX,sy:e.clientY,ghost:null};
+});
+window.addEventListener('pointermove',e=>{
+  if(!libDrag)return;
+  if(!libDrag.ghost&&Math.hypot(e.clientX-libDrag.sx,e.clientY-libDrag.sy)>6){
+    const g=document.createElement('div');g.className='ghost';g.innerHTML=miniIcon(libDrag.type);document.body.appendChild(g);libDrag.ghost=g;
+    if(innerWidth<=760)$('#library').classList.remove('show');
+  }
+  if(libDrag.ghost){libDrag.ghost.style.left=(e.clientX-30)+'px';libDrag.ghost.style.top=(e.clientY-22)+'px';}
+});
+window.addEventListener('pointerup',e=>{
+  if(!libDrag)return;const d=libDrag;libDrag=null;
+  if(d.ghost){d.ghost.remove();const r=svg.getBoundingClientRect();
+    if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){const w=toWorld(e.clientX,e.clientY);addBlock(d.type,w.x,w.y);}}
+  else if(e.target.closest&&e.target.closest('.lib-item')){
+    const r=svg.getBoundingClientRect();const w=toWorld(r.left+r.width/2,r.top+r.height/2);const o=(addCount++%6)*18;
+    addBlock(d.type,w.x+o,w.y+o);if(innerWidth<=760)$('#library').classList.remove('show');
+  }
+});
+window.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('lib-item')){e.preventDefault();const r=svg.getBoundingClientRect();const w=toWorld(r.left+r.width/2,r.top+r.height/2);addBlock(e.target.dataset.type,w.x,w.y);}});
+function addBlock(type,x,y){
+  const d=BLOCKS[type];pushUndo();
+  const b={id:uid(),type,name:uniqueName(d.label),x:snap(x-d.w/2),y:snap(y)-d.h/2,w:d.w,h:d.h,p:{...d.def},flip:false};
+  model.blocks.push(b);sel=new Set([b.id]);selLine=null;save();render();
+  setStatus(`Added “${b.name}”. Double-click it to set parameters.`);
+}
+
+/* =====================================================================
+   7) Dialogs
+   ===================================================================== */
+function dialog(title,bodyHtml,{onOk,okLabel='OK',apply=false,cancel=true}={}){
+  const back=document.createElement('div');back.className='dlg-back';
+  back.innerHTML=`<div class="dlg" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="dlg-title">${esc(title)}</div><div class="dlg-body">${bodyHtml}</div>
+    <div class="dlg-actions">${cancel?'<button class="btn" data-act="cancel">Cancel</button>':''}${apply?'<button class="btn" data-act="apply">Apply</button>':''}<button class="btn primary" data-act="ok">${esc(okLabel)}</button></div></div>`;
+  $('#app').appendChild(back);
+  const first=back.querySelector('input,select,textarea,.btn.primary');if(first)setTimeout(()=>first.focus(),0);
+  back.addEventListener('click',e=>{
+    const a=e.target.closest('[data-act]');if(e.target===back){back.remove();return;}if(!a)return;
+    if(a.dataset.act==='cancel'){back.remove();return;}
+    if(onOk){const ok=onOk(back,a.dataset.act==='apply');if(ok===false)return;}
+    if(a.dataset.act==='ok')back.remove();
+  });
+  back.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName!=='TEXTAREA'){e.preventDefault();back.querySelector('[data-act="ok"]').click();}});
+  return back;
+}
+function openBlock(id){const b=getB(id);if(!b)return;if(b.type==='Scope')openScope(id);else openParams(id);}
+function openParams(id){
+  const b=getB(id);if(!b)return;const d=BLOCKS[b.type];
+  if(b.type==='Unknown'){
+    dialog(`Block: ${b.name}`,`<fieldset class="desc"><legend>${esc(b.p.BlockType||'Unsupported')}</legend><p>This block type isn’t supported yet. You can view the model, but it won’t simulate while this block is in it. Rebuild the same behavior with supported blocks (for example Fcn), then delete this one.</p></fieldset>`,{cancel:false});return;
+  }
+  const flds=d.fields.map(f=>{
+    const v=b.p[f.k]??d.def[f.k]??'';
+    const input=f.opts?`<select data-k="${f.k}">${f.opts.map(([val,lab])=>`<option value="${esc(val)}"${val===v?' selected':''}>${esc(lab)}</option>`).join('')}</select>`
+      :`<input data-k="${f.k}" value="${esc(v)}" spellcheck="false" autocomplete="off">`;
+    return `<label class="fld"><span>${esc(f.l)}</span>${input}<span class="ferr" data-err="${f.k}"></span></label>`;
+  }).join('');
+  const body=`<fieldset class="desc"><legend>${esc(d.label)}</legend><p>${esc(d.desc)}</p></fieldset>
+    <label class="fld"><span>Block name</span><input data-name value="${esc(b.name)}" autocomplete="off"><span class="ferr" data-err="_name"></span></label>${flds}
+    ${d.fields.some(f=>!f.opts&&!f.raw)?'<p class="hint">Enter a number or use variables defined in Settings (e.g. K, 2*T).</p>':''}`;
+  dialog(`Block parameters: ${b.name}`,body,{onOk(back){
+    let ws={};try{ws=parseWorkspace(model.settings.ws);}catch(e){}
+    let ok=true;const np={};
+    back.querySelectorAll('.ferr').forEach(el=>el.textContent='');
+    const name=back.querySelector('[data-name]').value.trim();
+    if(!name){back.querySelector('[data-err="_name"]').textContent='Block name can’t be empty.';ok=false;}
+    else if(model.blocks.some(x=>x.id!==b.id&&x.name===name)){back.querySelector('[data-err="_name"]').textContent='Another block already has this name.';ok=false;}
+    for(const f of d.fields){
+      const el=back.querySelector(`[data-k="${f.k}"]`);const v=el.value.trim();np[f.k]=v;
+      if(f.opts||f.raw)continue;
+      try{
+        if(f.expr){parseExpr(v);continue;}
+        const r=evalParam(v,ws);if(!f.vec)scalar(r);
+      }catch(e){
+        const msg=/undefined variable/.test(e.message)?e.message+'. Add it under Settings → Model variables.':e.message;
+        back.querySelector(`[data-err="${f.k}"]`).textContent=msg.charAt(0).toUpperCase()+msg.slice(1);ok=false;
+      }
+    }
+    if(b.type==='Scope'&&!/^\d+$/.test(np.NumInputPorts||'')){back.querySelector('[data-err="NumInputPorts"]').textContent='Enter a whole number from 1 to 8.';ok=false;}
+    if(!ok)return false;
+    pushUndo();b.name=name;Object.assign(b.p,np);
+    for(const l of model.lines)if(l.dst.b===b.id&&b.type==='Sum')delete l.pts;
+    const ni=nInOf(b);model.lines=model.lines.filter(l=>!(l.dst.b===b.id&&l.dst.port>=ni));
+    save();render();const w=scopeWins.get(b.id);if(w)w.title.textContent=b.name;
+    setStatus(`Updated “${b.name}”.`);
+  }});
+}
+function openSettings(){
+  const s=model.settings;
+  const body=`<label class="fld"><span>Stop time (s)</span><input data-k="stop" value="${esc(s.stop)}"><span class="ferr" data-err="stop"></span></label>
+    <label class="fld"><span>Solver</span><select data-k="solver"><option value="ode4"${s.solver!=='ode1'?' selected':''}>ode4: Runge–Kutta, fixed step (recommended)</option><option value="ode1"${s.solver==='ode1'?' selected':''}>ode1: Euler, fixed step</option></select></label>
+    <label class="fld"><span>Fixed step size (s)</span><input data-k="step" value="${esc(s.step||'auto')}"><span class="ferr" data-err="step"></span></label>
+    <p class="hint">With “auto”, the step is one thousandth of the stop time, reduced automatically for fast dynamics and sample times.</p>
+    <label class="fld"><span>Model variables</span><textarea data-k="ws" spellcheck="false" placeholder="K = 2;&#10;T = 0.5;">${esc(s.ws||'')}</textarea><span class="ferr" data-err="ws"></span></label>
+    <p class="hint">Works like the MATLAB workspace: one assignment per line. Use these names in block parameters.</p>`;
+  dialog('Model settings',body,{onOk(back){
+    const g=k=>back.querySelector(`[data-k="${k}"]`).value.trim();
+    back.querySelectorAll('.ferr').forEach(el=>el.textContent='');
+    let ok=true,ws={};
+    try{ws=parseWorkspace(back.querySelector('[data-k="ws"]').value);}catch(e){back.querySelector('[data-err="ws"]').textContent=e.message;ok=false;}
+    try{const v=scalar(evalParam(g('stop'),ws));if(!(v>0))throw new Error('must be positive');}catch(e){back.querySelector('[data-err="stop"]').textContent='Stop time: '+e.message;ok=false;}
+    const st=g('step')||'auto';if(st!=='auto'){try{const v=scalar(evalParam(st,ws));if(!(v>0))throw new Error('must be positive');}catch(e){back.querySelector('[data-err="step"]').textContent='Step size: '+e.message+' (or enter auto)';ok=false;}}
+    if(!ok)return false;
+    pushUndo();Object.assign(model.settings,{stop:g('stop'),solver:g('solver'),step:st,ws:back.querySelector('[data-k="ws"]').value});
+    syncStop();save();render();setStatus('Model settings saved.');
+  }});
+}
+// Repository link shown in Help → About; leave empty to hide it.
+const REPO_URL='';
+function openHelp(){
+  const rows=[['Add a block','Drag it from the library onto the canvas, or click it.'],['Connect','Hover a block to see its ports, then drag from an output port to another block’s input. To feed one output to several blocks, drag from the output port again, or Ctrl+drag its existing line.'],['Route lines','Drag any line segment up, down, left or right to move it. Double-click a line to return it to automatic routing.'],['Save','Save writes the model to a .json file you can open later with Open. Changes are also kept automatically in this browser.'],
+    ['Parameters','Double-click a block (or select it and press Enter). For a Scope this opens the plot window.'],['Move and pan','Drag blocks to move them; drag empty space to pan; use the wheel to zoom.'],
+    ['Delete','Deletes the selected block or line.'],['Ctrl+I','Flips the selected block horizontally (for feedback paths).'],['Ctrl+T','Runs the simulation.'],['Ctrl+Z','Undo.'],['Ctrl+S','Saves the model to a file.'],['Space','Fits the model to the view.'],['Shift+click','Selects several blocks.']];
+  dialog('Help and about',`<table class="keys">${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>
+    <p class="hint" style="margin-top:12px">Your model is saved automatically in this browser. .slx files are read only; subsystems and unsupported blocks appear with a dashed outline.</p>
+    <fieldset class="desc" style="margin:14px 0 0"><legend>About</legend>
+      <p><b style="color:var(--text)">Simuwire v1.0</b>, block diagram simulation in your browser.<br>Created by Şenol Gülgönül. Open source under the MIT License.${REPO_URL?`<br><a href="${esc(REPO_URL)}" target="_blank" rel="noopener">Source code and examples on GitHub</a>`:''}</p>
+      <p style="margin-top:6px;font-size:12px">Not affiliated with The MathWorks, Inc. MATLAB and Simulink are registered trademarks of The MathWorks, Inc.</p>
+    </fieldset>`,{cancel:false});
+}
+
+/* =====================================================================
+   8) Scope windows
+   ===================================================================== */
+const scopeWins=new Map();let scopeZ=30,scopeCount=0;
+// Black-and-white scope: series are told apart by line style, so plots survive printing.
+const SCOPE_DASH=[[],[7,4],[2,3],[10,3,2,3],[14,5],[4,2,4,6],[1,4],[10,3,2,3,2,3]];
+const SCOPE_COLORS=new Array(8).fill('#000000');
+function openScope(id){
+  const b=getB(id);if(!b)return;
+  let w=scopeWins.get(id);
+  if(!w){
+    const el=document.createElement('section');el.className='scope';el.setAttribute('aria-label','Scope: '+b.name);
+    el.innerHTML=`<header><b></b><button data-a="params" title="Scope parameters">Settings</button><button data-a="close" title="Close" aria-label="Close">✕</button></header><canvas></canvas><footer>&nbsp;</footer>`;
+    const app=$('#app');app.appendChild(el);
+    const ar=app.getBoundingClientRect();const n=scopeCount++%5;
+    if(ar.width<=760){el.style.left=Math.max(4,(ar.width-el.offsetWidth)/2)+'px';el.style.top=Math.max(44,ar.height-el.offsetHeight-40-n*20)+'px';}
+    else{el.style.left=Math.max(4,ar.width-el.offsetWidth-16-n*40)+'px';
+    el.style.top=Math.max(44,Math.min(ar.height-el.offsetHeight-36,52+n*44))+'px';}
+    w={el,canvas:el.querySelector('canvas'),title:el.querySelector('b'),foot:el.querySelector('footer'),id,hover:null};
+    w.title.textContent=b.name;scopeWins.set(id,w);
+    el.querySelector('[data-a="close"]').onclick=()=>{el.remove();scopeWins.delete(id);};
+    el.querySelector('[data-a="params"]').onclick=()=>openParams(id);
+    el.addEventListener('pointerdown',()=>{el.style.zIndex=++scopeZ;});
+    const hd=el.querySelector('header');
+    hd.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;hd.setPointerCapture(e.pointerId);const sx=e.clientX-el.offsetLeft,sy=e.clientY-el.offsetTop;
+      const mv=ev=>{el.style.left=(ev.clientX-sx)+'px';el.style.top=Math.max(0,ev.clientY-sy)+'px';};
+      const up=()=>{hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);};
+      hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);});
+    w.canvas.addEventListener('pointermove',e=>{const r=w.canvas.getBoundingClientRect();w.hover=e.clientX-r.left;drawScope(w);});
+    w.canvas.addEventListener('pointerleave',()=>{w.hover=null;drawScope(w);});
+    new ResizeObserver(()=>drawScope(w)).observe(el);
+  }
+  w.el.style.zIndex=++scopeZ;drawScope(w);
+}
+function niceTicks(a,b,n){
+  const span=b-a||1,raw=span/n,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;
+  const st=(f<1.5?1:f<3?2:f<7?5:10)*p,out=[];
+  for(let v=Math.ceil(a/st-1e-9)*st;v<=b+st*1e-9;v+=st)out.push(Math.abs(v)<st*1e-9?0:+v.toPrecision(12));
+  return out;
+}
+const tickLbl=v=>{const a=Math.abs(v);return a!==0&&(a<1e-3||a>=1e5)?v.toExponential(1):String(+v.toPrecision(6));};
+function drawScope(w){
+  const c=w.canvas,dpr=window.devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;if(!W||!H)return;
+  c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+  g.fillStyle='#ffffff';g.fillRect(0,0,W,H);
+  const data=results&&results.scopes[w.id];
+  g.font='12px "Source Sans 3", "Segoe UI", Helvetica, Arial, sans-serif';
+  if(!data||!data.t.length){g.fillStyle='#666666';g.textAlign='center';g.fillText('No data yet. Run the simulation.',W/2,H/2);w.foot.textContent='\u00a0';return;}
+  const L=50,R=14,T=data.ys.length>1?30:12,B=26,pw=W-L-R,ph=H-T-B;
+  const t=data.t,t0=t[0],t1=t[t.length-1]||1;
+  let y0=Infinity,y1=-Infinity;for(const ys of data.ys)for(const v of ys){if(v<y0)y0=v;if(v>y1)y1=v;}
+  if(!isFinite(y0)){y0=-1;y1=1;}
+  if(y1-y0<1e-12){y0-=1;y1+=1;}else{const pad=(y1-y0)*.08;y0-=pad;y1+=pad;}
+  const X=v=>L+(v-t0)/(t1-t0||1)*pw,Y=v=>T+(1-(v-y0)/(y1-y0))*ph;
+  g.strokeStyle='#d9d9d9';g.lineWidth=1;g.fillStyle='#222222';g.textAlign='center';g.textBaseline='top';
+  for(const v of niceTicks(t0,t1,Math.max(2,Math.floor(pw/80)))){const x=Math.round(X(v))+.5;g.beginPath();g.moveTo(x,T);g.lineTo(x,T+ph);g.stroke();g.fillText(tickLbl(v),x,T+ph+5);}
+  g.textAlign='right';g.textBaseline='middle';
+  for(const v of niceTicks(y0,y1,Math.max(2,Math.floor(ph/45)))){const y=Math.round(Y(v))+.5;g.beginPath();g.moveTo(L,y);g.lineTo(L+pw,y);g.stroke();g.fillText(tickLbl(v),L-6,y);}
+  g.strokeStyle='#000000';g.strokeRect(L+.5,T+.5,pw,ph);
+  g.save();g.beginPath();g.rect(L,T,pw,ph);g.clip();
+  const step=Math.max(1,Math.floor(t.length/(pw*3)));
+  data.ys.forEach((ys,k)=>{g.strokeStyle='#000000';g.lineWidth=1.6;g.setLineDash(SCOPE_DASH[k%SCOPE_DASH.length]);g.beginPath();
+    for(let i=0;i<t.length;i+=step){const x=X(t[i]),y=Y(ys[i]);if(i)g.lineTo(x,y);else g.moveTo(x,y);}
+    const j=t.length-1;g.lineTo(X(t[j]),Y(ys[j]));g.stroke();});
+  g.setLineDash([]);
+  g.restore();
+  if(data.ys.length>1){g.textAlign='left';g.textBaseline='middle';let lx=L,ly=14;
+    data.labels.forEach((lab,k)=>{const tw=g.measureText(lab).width;if(k&&lx+30+tw>W-R){return;}g.strokeStyle='#000000';g.lineWidth=1.6;g.setLineDash(SCOPE_DASH[k%SCOPE_DASH.length]);g.beginPath();g.moveTo(lx,ly);g.lineTo(lx+24,ly);g.stroke();g.setLineDash([]);g.fillStyle='#111111';g.fillText(lab,lx+30,ly);lx+=30+tw+18;});}
+  if(w.hover!=null&&w.hover>=L&&w.hover<=L+pw){
+    const tv=t0+(w.hover-L)/pw*(t1-t0);let lo=0,hi=t.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(t[m]<=tv)lo=m;else hi=m;}
+    const i=Math.abs(t[hi]-tv)<Math.abs(t[lo]-tv)?hi:lo;
+    g.strokeStyle='rgba(0,0,0,.45)';g.setLineDash([3,3]);g.beginPath();g.moveTo(X(t[i])+.5,T);g.lineTo(X(t[i])+.5,T+ph);g.stroke();g.setLineDash([]);
+    data.ys.forEach((ys,k)=>{g.fillStyle='#ffffff';g.strokeStyle='#000000';g.lineWidth=1.4;g.beginPath();g.arc(X(t[i]),Y(ys[i]),3.2,0,7);g.fill();g.stroke();});
+    w.foot.textContent=`t = ${fmtVal(t[i])} s   `+data.ys.map((ys,k)=>`${data.labels[k]}: ${fmtVal(ys[i])}`).join('   ');
+  }else{
+    w.foot.textContent=data.ys.map((ys,k)=>{let mx=-Infinity;for(const v of ys)if(v>mx)mx=v;return `${data.labels[k]}: final ${fmtVal(ys[ys.length-1])}, max ${fmtVal(mx)}`;}).join('   ');
+  }
+}
+
+/* =====================================================================
+   9) Run
+   ===================================================================== */
+function syncStop(){$('#stopTime').value=model.settings.stop;}
+$('#stopTime').addEventListener('change',e=>{const v=e.target.value.trim();if(v&&v!==model.settings.stop){pushUndo();model.settings.stop=v;save();}});
+function run(){
+  const v=$('#stopTime').value.trim();if(v&&v!==model.settings.stop){model.settings.stop=v;save();}
+  errIds.clear();setStatus('Running simulation…');
+  const btn=$('#btnRun');btn.disabled=true;
+  setTimeout(()=>{
+    try{
+      results=simulate(model);
+      const wn=results.warns;
+      errIds=new Set(wn.map(w=>w.id));
+      if(wn.length)setStatus(`Simulation finished with ${wn.length} warning${wn.length>1?'s':''}: ${wn[0].msg}${wn.length>1?' (and more)':''}.`,'warn');
+      else setStatus(`Simulation finished: 0–${fmtVal(results.stop)} s, step ${fmtVal(results.h)} s.`,'ok');
+      render();
+      const scopes=model.blocks.filter(b=>b.type==='Scope');
+      for(const w of scopeWins.values())drawScope(w);
+      scopes.slice(0,innerWidth<=760?1:4).forEach(b=>openScope(b.id));
+    }catch(e){
+      results=null;errIds=new Set(e.ids||[]);setStatus(e.message||String(e),'err');render();
+      for(const w of scopeWins.values())drawScope(w);
+      if(!(e instanceof SimError))console.error(e);
+    }finally{btn.disabled=false;}
+  },15);
+}
+
+/* =====================================================================
+   10) .slx import
+   ===================================================================== */
+function parseMx(buf){
+  const dv=new DataView(buf),len=buf.byteLength;
+  const el=off=>{let type=dv.getUint32(off,true);if(type>>>16){const n=type>>>16;return{type:type&0xffff,n,data:off+4,next:off+8};}
+    const n=dv.getUint32(off+4,true);return{type,n,data:off+8,next:off+8+Math.ceil(n/8)*8};};
+  const SZ={1:1,2:1,3:2,4:2,5:4,6:4,7:4,9:8,12:8,13:8};
+  const nums=e=>{const sz=SZ[e.type],out=[];if(!sz)return out;for(let i=0;i<e.n/sz;i++){const o=e.data+i*sz;
+    out.push(e.type===9?dv.getFloat64(o,true):e.type===7?dv.getFloat32(o,true):e.type===1?dv.getInt8(o):e.type===2?dv.getUint8(o):e.type===3?dv.getInt16(o,true):e.type===4?dv.getUint16(o,true):e.type===5?dv.getInt32(o,true):e.type===6?dv.getUint32(o,true):e.type===12?Number(dv.getBigInt64(o,true)):Number(dv.getBigUint64(o,true)));}return out;};
+  const matrix=e=>{
+    let p=e.data;const fl=el(p);const cls=dv.getUint32(fl.data,true)&0xff;p=fl.next;
+    const dm=el(p);p=dm.next;const nm=el(p);p=nm.next;
+    if(cls===2){const fln=el(p);const flen=nums(fln)[0];p=fln.next;const fn=el(p);p=fn.next;const names=[];
+      for(let i=0;i<fn.n/flen;i++){let s='';for(let j=0;j<flen;j++){const ch=dv.getUint8(fn.data+i*flen+j);if(!ch)break;s+=String.fromCharCode(ch);}names.push(s);}
+      const res={};for(const name of names){const sub=el(p);p=sub.next;if(sub.type===14&&sub.n>0){try{res[name]=matrix(sub);}catch(_){}}}return{struct:res};}
+    if(cls>=6&&cls<=15){const re=el(p);return{num:nums(re)};}
+    return{};
+  };
+  for(let off=0;off<Math.min(len-8,64);off+=4){
+    if(dv.getUint32(off,true)===14){try{const m=matrix(el(off));if(m.struct){const vars={};for(const [k,v] of Object.entries(m.struct))if(v.num&&v.num.length)vars[k]=v.num.length===1?v.num[0]:v.num;return vars;}}catch(_){}}
+  }
+  return{};
+}
+function mapSlxBlock(bt,P){
+  const pick=(type,keys,rename)=>{const p={...BLOCKS[type].def};for(const k of keys){const src=(rename&&rename[k])||k;if(P[src]!=null&&P[src]!=='')p[k]=P[src];}return{type,p};};
+  switch(bt){
+    case 'Constant':return pick('Constant',['Value']);
+    case 'Step':return pick('Step',['Time','Before','After']);
+    case 'Sin':return pick('Sine',['Amplitude','Bias','Frequency','Phase']);
+    case 'Clock':return{type:'Clock',p:{}};
+    case 'DiscretePulseGenerator':return pick('Pulse',['Amplitude','Period','PulseWidth','PhaseDelay']);
+    case 'Scope':return pick('Scope',['NumInputPorts']);
+    case 'Display':{const r=pick('Display',['Format']);if(r.p.Format!=='long')r.p.Format='short';return r;}
+    case 'Integrator':return pick('Integrator',['InitialCondition']);
+    case 'Derivative':return{type:'Derivative',p:{}};
+    case 'TransferFcn':return pick('TransferFcn',['Numerator','Denominator']);
+    case 'TransportDelay':return pick('TransportDelay',['DelayTime','InitialOutput']);
+    case 'Gain':return pick('Gain',['Gain']);
+    case 'Sum':return pick('Sum',['Inputs']);
+    case 'Product':return pick('Product',['Inputs']);
+    case 'Abs':return{type:'Abs',p:{}};
+    case 'Saturate':return pick('Saturation',['UpperLimit','LowerLimit']);
+    case 'DeadZone':return pick('DeadZone',['LowerValue','UpperValue'],{LowerValue:'LowerValue',UpperValue:'UpperValue'});
+    case 'UnitDelay':return pick('UnitDelay',['InitialCondition','SampleTime'],{InitialCondition:P.InitialCondition!=null?'InitialCondition':'X0'});
+    case 'ZeroOrderHold':return pick('ZOH',['SampleTime']);
+    case 'Switch':return pick('Switch',['Criteria','Threshold']);
+    case 'Fcn':{const r=pick('Fcn',['Expr']);r.p.Expr=r.p.Expr.replace(/u\s*\(\s*1\s*\)/g,'u');return r;}
+    case 'Reference':{
+      const src=(P.SourceBlock||'')+' '+(P.SourceType||'');
+      if(/PID 1dof|PID Controller/.test(src))return pick('PID',['Controller','Form','P','I','D','N']);
+      if(/Ramp/.test(src))return pick('Ramp',['slope','start','InitialOutput'],{InitialOutput:'X0'});
+      break;
+    }
+  }
+  const pr=(P.Ports||'[]').replace(/[\[\]]/g,'').split(/[,\s]+/).filter(Boolean).map(Number);
+  return{type:'Unknown',p:{BlockType:bt==='Reference'?(P.SourceType||P.SourceBlock||'Reference'):bt},ports:[pr[0]||0,Math.min(pr[1]||0,4)]};
+}
+async function importSlx(file){
+  if(typeof JSZip==='undefined')throw new Error('The ZIP reader didn’t load. Check your connection and reload the page.');
+  let zip;try{zip=await JSZip.loadAsync(file);}catch(e){throw new Error('Can’t read this file: it isn’t a valid .slx (ZIP) file.');}
+  const sf=zip.file('simulink/systems/system_root.xml');
+  if(!sf)throw new Error('No model definition found in this file (simulink/systems/system_root.xml). It may have been saved by a very old version.');
+  const doc=new DOMParser().parseFromString(await sf.async('string'),'application/xml');
+  const root=doc.documentElement;
+  const kids=(el,tag)=>Array.from(el.children).filter(c=>c.tagName===tag);
+  const pmap=el=>{const m={};for(const p of kids(el,'P'))m[p.getAttribute('Name')]=p.textContent;
+    for(const p of el.getElementsByTagName('P')){const k=p.getAttribute('Name');if(!(k in m))m[k]=p.textContent;}return m;};
+  const m=emptyModel();const sid=new Map();const unknown=[];
+  for(const el of kids(root,'Block')){
+    const bt=el.getAttribute('BlockType'),name=el.getAttribute('Name')||bt,P=pmap(el);
+    const pos=(P.Position||'[0, 0, 40, 40]').replace(/[\[\]]/g,'').split(/[,\s]+/).filter(Boolean).map(Number);
+    const [l,t,r,bb]=pos;let w=Math.max(16,(r-l)||40),h=Math.max(16,(bb-t)||40);
+    const mm=mapSlxBlock(bt,P);
+    if(mm.type==='Unknown')unknown.push(name);
+    const b={id:uid(),type:mm.type,name,x:l,y:t,w,h,p:mm.p,flip:P.BlockMirror==='on'||P.Orientation==='left'};
+    if(mm.ports)b.ports=mm.ports;
+    if(b.type==='Sum'){const d=Math.max(20,Math.min(w,h));b.w=b.h=d;}
+    m.blocks.push(b);sid.set(el.getAttribute('SID'),b.id);
+  }
+  // unique names
+  const seen=new Set();for(const b of m.blocks){let n=b.name,i=1;while(seen.has(n))n=b.name+'_'+(i++);b.name=n;seen.add(n);}
+  const parseEnd=s=>{const r=/^\s*(\d+)#(in|out):(\d+)\s*$/.exec(s||'');return r?{sid:r[1],kind:r[2],port:+r[3]-1}:null;};
+  let skipped=0;
+  for(const ln of kids(root,'Line')){
+    const srcP=kids(ln,'P').find(p=>p.getAttribute('Name')==='Src');const src=parseEnd(srcP&&srcP.textContent);
+    if(!src||!sid.has(src.sid)){skipped++;continue;}
+    for(const p of ln.getElementsByTagName('P')){if(p.getAttribute('Name')!=='Dst')continue;const d=parseEnd(p.textContent);
+      if(!d||!sid.has(d.sid)||d.kind!=='in'){skipped++;continue;}
+      m.lines.push({id:uid('l'),src:{b:sid.get(src.sid),port:src.port},dst:{b:sid.get(d.sid),port:d.port}});}
+  }
+  // variables: model workspace + names used but not found
+  let vars={};const mx=zip.file('simulink/modelWorkspace.mxarray');
+  if(mx){try{vars=parseMx(await mx.async('arraybuffer'));}catch(e){vars={};}}
+  const used=new Set();
+  for(const b of m.blocks){const d=BLOCKS[b.type];for(const f of d.fields||[]){if(f.opts||f.raw)continue;
+    try{const toks=tokenize(String(b.p[f.k]??''));toks.forEach((tk,i)=>{if(tk.k==='id'&&!(tk.v in FUNCS&&toks[i+1]&&toks[i+1].v==='(')&&!(tk.v in CONSTS)&&!(f.expr&&(tk.v==='u'||tk.v==='t')))used.add(tk.v);});}catch(e){}}}
+  const missing=[...used].filter(v=>!(v in vars));
+  const fmt=v=>Array.isArray(v)?'['+v.map(x=>+x.toPrecision(12)).join(' ')+']':String(+(+v).toPrecision(12));
+  m.settings.ws=Object.entries(vars).map(([k,v])=>`${k} = ${fmt(v)};`).concat(missing.map(k=>`${k} = 1;   % value not found in the .slx, please check`)).join('\n');
+  const cfg=zip.file('simulink/configSet0.xml');
+  if(cfg){const x=await cfg.async('string');const st=/<P Name="StopTime"[^>]*>([^<]*)</.exec(x);if(st&&st[1].trim())m.settings.stop=st[1].trim();}
+  m.settings.name=String(file.name||'model').replace(/\.slx$/i,'');
+  // shift positions to the top-left
+  if(m.blocks.length){const mxn=Math.min(...m.blocks.map(b=>b.x)),myn=Math.min(...m.blocks.map(b=>b.y));for(const b of m.blocks){b.x+=40-mxn;b.y+=40-myn;}}
+  return{model:m,unknown,missing,vars:Object.keys(vars),skipped};
+}
+async function openFile(file){
+  if(!file)return;
+  setStatus(`Reading “${file.name}”…`);
+  try{
+    if(/\.json$/i.test(file.name)){
+      let obj;try{obj=JSON.parse(await file.text());}catch(e){throw new Error(`“${file.name}” isn’t valid JSON.`);}
+      const m=obj&&obj.format==='simuwire'?obj.model:obj;
+      if(!m||!Array.isArray(m.blocks)||!Array.isArray(m.lines))throw new Error(`“${file.name}” isn’t a Simuwire model file.`);
+      for(const b of m.blocks){if(!BLOCKS[b.type]){b.p={BlockType:String(b.type)};b.type='Unknown';}b.p=b.p||{};}
+      m.settings=Object.assign(emptyModel().settings,m.settings||{});
+      if(!m.settings.name||m.settings.name==='untitled')m.settings.name=file.name.replace(/(\.simuwire)?\.json$/i,'').replace(/_\d{4}-\d{2}-\d{2}_\d{4,6}$/,'');
+      pushUndo();model=m;results=null;sel.clear();selLine=null;errIds=new Set(model.blocks.filter(b=>b.type==='Unknown').map(b=>b.id));
+      for(const w of scopeWins.values())w.el.remove();scopeWins.clear();
+      syncStop();save();render();fitView();
+      setStatus(`Opened “${file.name}”: ${model.blocks.length} blocks, ${model.lines.length} connections.`,'ok');
+      return;
+    }
+    const r=await importSlx(file);
+    pushUndo();model=r.model;results=null;sel.clear();selLine=null;errIds=new Set(model.blocks.filter(b=>b.type==='Unknown').map(b=>b.id));
+    for(const w of scopeWins.values())w.el.remove();scopeWins.clear();
+    syncStop();save();render();fitView();
+    const parts=[`Opened “${file.name}”: ${model.blocks.length} blocks, ${model.lines.length} connections.`];
+    if(r.vars.length)parts.push(`Model variables loaded: ${r.vars.join(', ')}.`);
+    if(r.missing.length)parts.push(`Variables without a value were set to 1: ${r.missing.join(', ')} (fix them in Settings).`);
+    if(r.unknown.length)parts.push(`Unsupported blocks: ${r.unknown.join(', ')}.`);
+    setStatus(parts.join(' '),r.unknown.length||r.missing.length?'warn':'ok');
+  }catch(e){setStatus(e.message,'err');}
+}
+
+/* =====================================================================
+   11) Startup
+   ===================================================================== */
+$('#btnRun').onclick=run;
+$('#btnSettings').onclick=openSettings;
+$('#btnHelp').onclick=openHelp;
+$('#btnUndo').onclick=undo;
+$('#btnFit').onclick=fitView;
+$('#btnZoomIn').onclick=()=>zoomCenter(1.2);
+$('#btnZoomOut').onclick=()=>zoomCenter(1/1.2);
+$('#btnLib').onclick=()=>$('#library').classList.toggle('show');
+const openPicker=()=>$('#fileIn').click();
+$('#btnOpen').onclick=openPicker;
+// Inside claude.ai the page saves through the downloads capability; anywhere else (GitHub Pages,
+// a local file) it falls back to a normal browser download.
+const inClaude=!!(window.claude&&typeof window.claude.use==='function');
+let downloadsApi=null;
+if(!inClaude)$('#btnSave').hidden=false;
+(async()=>{if(!inClaude)return;try{downloadsApi=await window.claude.use('downloads');}catch(e){downloadsApi=null;}
+  if(downloadsApi)$('#btnSave').hidden=false;})();
+async function saveFile(){
+  const base=String(model.settings.name||'simuwire-model').replace(/[^\w\-. ]+/g,'_').trim()||'simuwire-model';
+  const now=new Date(),p2=n=>String(n).padStart(2,'0');
+  const stamp=`${now.getFullYear()}-${p2(now.getMonth()+1)}-${p2(now.getDate())}_${p2(now.getHours())}${p2(now.getMinutes())}`;
+  const fname=`${base}_${stamp}.json`;
+  if(!inClaude){
+    const data=JSON.stringify({format:'simuwire',version:1,model},null,2);
+    const url=URL.createObjectURL(new Blob([data],{type:'application/json'}));
+    const a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+    setStatus(`Saved “${fname}”. Open it later with Open.`,'ok');return;
+  }
+  if(!downloadsApi){setStatus('Saving to a file isn’t available in this view. Your model is still kept automatically in this browser.','warn');return;}
+  try{
+    await downloadsApi.save({filename:fname,data:JSON.stringify({format:'simuwire',version:1,model},null,2)});
+    setStatus(`Saved “${fname}”. Open it later with Open.`,'ok');
+  }catch(e){
+    const c=e&&e.code;
+    if(c==='declined')setStatus('Save cancelled.');
+    else if(c==='rate_limited')setStatus('A save prompt is already open. Finish it, then try again.','warn');
+    else{setStatus('Saving to a file isn’t available in this view. Your model is still kept automatically in this browser.','warn');if(c!=='bad_request')$('#btnSave').hidden=true;}
+  }
+}
+$('#btnSave').onclick=saveFile;
+$('#fileIn').onchange=e=>{openFile(e.target.files[0]);e.target.value='';};
+function loadExample(){pushUndo();model=exampleModel();results=null;sel.clear();selLine=null;errIds.clear();for(const w of scopeWins.values())w.el.remove();scopeWins.clear();syncStop();save();render();fitView();setStatus('Example loaded: two PI control loops, one with dead time and one without. Press Run.','ok');}
+// Example models (same files as the examples/ folder of the repository)
+const EXAMPLES=[{"g":"Basics","t":"First-order step response","d":"K/(Ts+1) rising to its final value K.","m":{"blocks":[{"id":"b1","type":"Step","name":"Step","x":40.0,"y":82.0,"w":40,"h":36,"p":{"Time":"1","Before":"0","After":"1"}},{"id":"b2","type":"TransferFcn","name":"Plant K/(Ts+1)","x":165.0,"y":80.0,"w":70,"h":40,"p":{"Numerator":"[K]","Denominator":"[T 1]"}},{"id":"b3","type":"Scope","name":"Scope","x":342.0,"y":82.0,"w":36,"h":36,"p":{"NumInputPorts":"1"}},{"id":"b4","type":"Display","name":"Final value","x":340.0,"y":165.0,"w":80,"h":30,"p":{"Format":"short"}}],"lines":[{"id":"l5","src":{"b":"b1","port":0},"dst":{"b":"b2","port":0}},{"id":"l6","src":{"b":"b2","port":0},"dst":{"b":"b3","port":0}},{"id":"l7","src":{"b":"b2","port":0},"dst":{"b":"b4","port":0}}],"settings":{"stop":"15","solver":"ode4","step":"auto","ws":"K = 2;   % gain\nT = 2;   % time constant (s)","name":"first_order_step_response"}}},{"g":"Basics","t":"Second-order damping","d":"Overshoot for damping ratios 0.2, 0.5 and 1.","m":{"blocks":[{"id":"b1","type":"Step","name":"Step","x":40.0,"y":162.0,"w":40,"h":36,"p":{"Time":"0","Before":"0","After":"1"}},{"id":"b2","type":"TransferFcn","name":"zeta = 0.2","x":185.0,"y":70.0,"w":150,"h":40,"p":{"Numerator":"[wn^2]","Denominator":"[1 2*z1*wn wn^2]"}},{"id":"b3","type":"TransferFcn","name":"zeta = 0.5","x":185.0,"y":160.0,"w":150,"h":40,"p":{"Numerator":"[wn^2]","Denominator":"[1 2*z2*wn wn^2]"}},{"id":"b4","type":"TransferFcn","name":"zeta = 1","x":185.0,"y":250.0,"w":150,"h":40,"p":{"Numerator":"[wn^2]","Denominator":"[1 2*z3*wn wn^2]"}},{"id":"b5","type":"Scope","name":"Scope","x":422.0,"y":144.0,"w":36,"h":72,"p":{"NumInputPorts":"3"}}],"lines":[{"id":"l6","src":{"b":"b1","port":0},"dst":{"b":"b2","port":0}},{"id":"l7","src":{"b":"b1","port":0},"dst":{"b":"b3","port":0}},{"id":"l8","src":{"b":"b1","port":0},"dst":{"b":"b4","port":0}},{"id":"l9","src":{"b":"b2","port":0},"dst":{"b":"b5","port":0}},{"id":"l10","src":{"b":"b3","port":0},"dst":{"b":"b5","port":1}},{"id":"l11","src":{"b":"b4","port":0},"dst":{"b":"b5","port":2}}],"settings":{"stop":"20","solver":"ode4","step":"auto","ws":"wn = 1;    % natural frequency (rad/s)\nz1 = 0.2;  % underdamped\nz2 = 0.5;\nz3 = 1;    % critically damped","name":"second_order_damping"}}},{"g":"Basics","t":"Mass-spring-damper","d":"m·x″ = F − c·x′ − k·x built from integrators.","m":{"blocks":[{"id":"b1","type":"Step","name":"Force F","x":30.0,"y":82.0,"w":40,"h":36,"p":{"Time":"1","Before":"0","After":"1"}},{"id":"b2","type":"Sum","name":"Sum","x":117.0,"y":87.0,"w":26,"h":26,"p":{"Inputs":"|+-"}},{"id":"b3","type":"Sum","name":"Sum1","x":177.0,"y":87.0,"w":26,"h":26,"p":{"Inputs":"|+-"}},{"id":"b4","type":"Gain","name":"1/m","x":240.0,"y":80.0,"w":40,"h":40,"p":{"Gain":"1/m"}},{"id":"b5","type":"Integrator","name":"Velocity","x":330.0,"y":80.0,"w":40,"h":40,"p":{"InitialCondition":"0"}},{"id":"b6","type":"Integrator","name":"Position","x":440.0,"y":80.0,"w":40,"h":40,"p":{"InitialCondition":"0"}},{"id":"b7","type":"Scope","name":"Scope","x":562.0,"y":82.0,"w":36,"h":36,"p":{"NumInputPorts":"1"}},{"id":"b8","type":"Gain","name":"c","x":330.0,"y":155.0,"w":40,"h":40,"p":{"Gain":"c"},"flip":true},{"id":"b9","type":"Gain","name":"k","x":440.0,"y":230.0,"w":40,"h":40,"p":{"Gain":"k"},"flip":true}],"lines":[{"id":"l10","src":{"b":"b1","port":0},"dst":{"b":"b2","port":0}},{"id":"l11","src":{"b":"b2","port":0},"dst":{"b":"b3","port":0}},{"id":"l12","src":{"b":"b3","port":0},"dst":{"b":"b4","port":0}},{"id":"l13","src":{"b":"b4","port":0},"dst":{"b":"b5","port":0}},{"id":"l14","src":{"b":"b5","port":0},"dst":{"b":"b6","port":0}},{"id":"l15","src":{"b":"b6","port":0},"dst":{"b":"b7","port":0}},{"id":"l16","src":{"b":"b5","port":0},"dst":{"b":"b8","port":0}},{"id":"l17","src":{"b":"b6","port":0},"dst":{"b":"b9","port":0}},{"id":"l18","src":{"b":"b8","port":0},"dst":{"b":"b3","port":1}},{"id":"l19","src":{"b":"b9","port":0},"dst":{"b":"b2","port":1}}],"settings":{"stop":"20","solver":"ode4","step":"auto","ws":"m = 1;    % mass (kg)\nc = 0.5;  % damping (N·s/m)\nk = 2;    % stiffness (N/m)","name":"mass_spring_damper"}}},{"g":"Basics","t":"Van der Pol oscillator","d":"A nonlinear limit cycle using Fcn and Product.","m":{"blocks":[{"id":"b1","type":"Sum","name":"Sum","x":137.0,"y":87.0,"w":26,"h":26,"p":{"Inputs":"|-+"}},{"id":"b2","type":"Integrator","name":"dx/dt","x":230.0,"y":80.0,"w":40,"h":40,"p":{"InitialCondition":"0"}},{"id":"b3","type":"Integrator","name":"x","x":360.0,"y":80.0,"w":40,"h":40,"p":{"InitialCondition":"2"}},{"id":"b4","type":"Scope","name":"Scope","x":502.0,"y":70.0,"w":36,"h":60,"p":{"NumInputPorts":"2"}},{"id":"b5","type":"Fcn","name":"1 - x^2","x":350.0,"y":183.0,"w":60,"h":34,"p":{"Expr":"1 - u^2"},"flip":true},{"id":"b6","type":"Product","name":"Product","x":240.0,"y":188.0,"w":40,"h":40,"p":{"Inputs":"2"},"flip":true},{"id":"b7","type":"Gain","name":"mu","x":178.0,"y":190.0,"w":36,"h":36,"p":{"Gain":"mu"},"flip":true}],"lines":[{"id":"l8","src":{"b":"b1","port":0},"dst":{"b":"b2","port":0}},{"id":"l9","src":{"b":"b2","port":0},"dst":{"b":"b3","port":0}},{"id":"l10","src":{"b":"b3","port":0},"dst":{"b":"b4","port":0}},{"id":"l11","src":{"b":"b2","port":0},"dst":{"b":"b4","port":1}},{"id":"l12","src":{"b":"b3","port":0},"dst":{"b":"b5","port":0}},{"id":"l13","src":{"b":"b5","port":0},"dst":{"b":"b6","port":0}},{"id":"l14","src":{"b":"b2","port":0},"dst":{"b":"b6","port":1}},{"id":"l15","src":{"b":"b6","port":0},"dst":{"b":"b7","port":0}},{"id":"l16","src":{"b":"b7","port":0},"dst":{"b":"b1","port":1}},{"id":"l17","src":{"b":"b3","port":0},"dst":{"b":"b1","port":0},"pts":[[425,100],[425,40],[115,40],[115,100]]}],"settings":{"stop":"30","solver":"ode4","step":"auto","ws":"mu = 1;   % nonlinearity","name":"van_der_pol_oscillator"}}},{"g":"Basics","t":"Saturation and dead zone","d":"A sine wave through two nonlinearities.","m":{"blocks":[{"id":"b1","type":"Sine","name":"Sine Wave","x":40.0,"y":142.0,"w":40,"h":36,"p":{"Amplitude":"A","Bias":"0","Frequency":"1","Phase":"0"}},{"id":"b2","type":"Saturation","name":"Saturation","x":200.0,"y":80.0,"w":40,"h":40,"p":{"UpperLimit":"1","LowerLimit":"-1"}},{"id":"b3","type":"DeadZone","name":"Dead Zone","x":200.0,"y":200.0,"w":40,"h":40,"p":{"LowerValue":"-0.5","UpperValue":"0.5"}},{"id":"b4","type":"Scope","name":"Scope","x":362.0,"y":124.0,"w":36,"h":72,"p":{"NumInputPorts":"3"}}],"lines":[{"id":"l5","src":{"b":"b1","port":0},"dst":{"b":"b4","port":0}},{"id":"l6","src":{"b":"b1","port":0},"dst":{"b":"b2","port":0}},{"id":"l7","src":{"b":"b1","port":0},"dst":{"b":"b3","port":0}},{"id":"l8","src":{"b":"b2","port":0},"dst":{"b":"b4","port":1}},{"id":"l9","src":{"b":"b3","port":0},"dst":{"b":"b4","port":2}}],"settings":{"stop":"10","solver":"ode4","step":"auto","ws":"A = 2;   % sine amplitude","name":"saturation_and_dead_zone"}}},{"g":"Basics","t":"Sample and hold","d":"Zero-Order Hold and Unit Delay at Ts = 0.5 s.","m":{"blocks":[{"id":"b1","type":"Sine","name":"Sine Wave","x":40.0,"y":122.0,"w":40,"h":36,"p":{"Amplitude":"1","Bias":"0","Frequency":"1","Phase":"0"}},{"id":"b2","type":"ZOH","name":"Zero-Order Hold","x":170.0,"y":120.0,"w":40,"h":40,"p":{"SampleTime":"Ts"}},{"id":"b3","type":"UnitDelay","name":"Unit Delay","x":300.0,"y":205.0,"w":40,"h":40,"p":{"InitialCondition":"0","SampleTime":"Ts"}},{"id":"b4","type":"Scope","name":"Scope","x":452.0,"y":104.0,"w":36,"h":72,"p":{"NumInputPorts":"3"}}],"lines":[{"id":"l5","src":{"b":"b1","port":0},"dst":{"b":"b2","port":0}},{"id":"l6","src":{"b":"b2","port":0},"dst":{"b":"b4","port":1}},{"id":"l7","src":{"b":"b2","port":0},"dst":{"b":"b3","port":0}},{"id":"l8","src":{"b":"b3","port":0},"dst":{"b":"b4","port":2}},{"id":"l9","src":{"b":"b1","port":0},"dst":{"b":"b4","port":0},"pts":[[94,140],[94,80],[420,80],[420,122]]}],"settings":{"stop":"10","solver":"ode4","step":"auto","ws":"Ts = 0.5;   % sample time (s)","name":"sample_and_hold"}}},{"g":"PID control","t":"PI on FOPDT, with and without dead time","d":"The same PI loop with a 1 s dead time and without.","m":{"blocks":[{"id":"bmvo83k1u23","type":"Constant","name":"setpoint","x":30,"y":63,"w":50,"h":30,"p":{"Value":"1"}},{"id":"bmvo83k1u24","type":"Sum","name":"Sum","x":125,"y":65,"w":26,"h":26,"p":{"Inputs":"|+-"}},{"id":"bmvo83k1u25","type":"PID","name":"PID Controller","x":190,"y":58,"w":70,"h":40,"p":{"Controller":"PI","Form":"Parallel","P":"0.833158676135846","I":"0.600306598212093","D":"0","N":"100"}},{"id":"bmvo83k1u26","type":"TransferFcn","name":"Transfer Fcn","x":305,"y":58,"w":70,"h":40,"p":{"Numerator":"[K]","Denominator":"[T 1]"}},{"id":"bmvo83k1u27","type":"TransportDelay","name":"Transport Delay","x":420,"y":58,"w":60,"h":40,"p":{"DelayTime":"L","InitialOutput":"0"}},{"id":"bmvo83k1u28","type":"Scope","name":"Scope","x":545,"y":60,"w":36,"h":36,"p":{"NumInputPorts":"1"}},{"id":"bmvo83k1u35","type":"Constant","name":"setpoint1","x":30,"y":253,"w":50,"h":30,"p":{"Value":"1"}},{"id":"bmvo83k1u36","type":"Sum","name":"Sum1","x":125,"y":255,"w":26,"h":26,"p":{"Inputs":"|+-"}},{"id":"bmvo83k1u37","type":"PID","name":"PID Controller1","x":190,"y":248,"w":70,"h":40,"p":{"Controller":"PI","Form":"Parallel","P":"0.833158676135846","I":"0.600306598212093","D":"0","N":"100"}},{"id":"bmvo83k1v38","type":"TransferFcn","name":"Transfer Fcn1","x":305,"y":248,"w":70,"h":40,"p":{"Numerator":"[K]","Denominator":"[T 1]"}},{"id":"bmvo83k1v39","type":"Scope","name":"Scope1","x":545,"y":250,"w":36,"h":36,"p":{"NumInputPorts":"1"}}],"lines":[{"id":"lmvo83k1u29","src":{"b":"bmvo83k1u23","port":0},"dst":{"b":"bmvo83k1u24","port":0}},{"id":"lmvo83k1u30","src":{"b":"bmvo83k1u24","port":0},"dst":{"b":"bmvo83k1u25","port":0}},{"id":"lmvo83k1u31","src":{"b":"bmvo83k1u25","port":0},"dst":{"b":"bmvo83k1u26","port":0}},{"id":"lmvo83k1u32","src":{"b":"bmvo83k1u26","port":0},"dst":{"b":"bmvo83k1u27","port":0}},{"id":"lmvo83k1u33","src":{"b":"bmvo83k1u27","port":0},"dst":{"b":"bmvo83k1u28","port":0}},{"id":"lmvo83k1u34","src":{"b":"bmvo83k1u27","port":0},"dst":{"b":"bmvo83k1u24","port":1}},{"id":"lmvo83k1v40","src":{"b":"bmvo83k1u35","port":0},"dst":{"b":"bmvo83k1u36","port":0}},{"id":"lmvo83k1v41","src":{"b":"bmvo83k1u36","port":0},"dst":{"b":"bmvo83k1u37","port":0}},{"id":"lmvo83k1v42","src":{"b":"bmvo83k1u37","port":0},"dst":{"b":"bmvo83k1v38","port":0}},{"id":"lmvo83k1v43","src":{"b":"bmvo83k1v38","port":0},"dst":{"b":"bmvo83k1v39","port":0}},{"id":"lmvo83k1v44","src":{"b":"bmvo83k1v38","port":0},"dst":{"b":"bmvo83k1u36","port":1}}],"settings":{"stop":"10","solver":"ode4","step":"auto","ws":"K = 1;\nT = 1;\nL = 1;","name":"FOPDT_PID_example"}}},{"g":"PID control","t":"PID tuning comparison on FOPDT","d":"P, PI and PID (Ziegler–Nichols, SIMC) with a load disturbance.","m":{"blocks":[{"id":"b1","type":"Scope","name":"Scope","x":812.0,"y":190.0,"w":36,"h":120,"p":{"NumInputPorts":"4"}},{"id":"b2","type":"Step","name":"Setpoint","x":30.0,"y":72.0,"w":40,"h":36,"p":{"Time":"1","Before":"0","After":"1"}},{"id":"b3","type":"Sum","name":"Sum","x":117.0,"y":77.0,"w":26,"h":26,"p":{"Inputs":"|+-"}},{"id":"b4","type":"PID","name":"P (Ziegler-Nichols)","x":180.0,"y":70.0,"w":120,"h":40,"p":{"Controller":"P","Form":"Parallel","P":"Kp_P","I":"1","D":"0","N":"100"}},{"id":"b5","type":"Step","name":"Disturbance","x":296.0,"y":10.0,"w":40,"h":36,"p":{"Time":"td","Before":"0","After":"d"}},{"id":"b6","type":"Sum","name":"Plant input","x":347.0,"y":77.0,"w":26,"h":26,"p":{"Inputs":"++|"}},{"id":"b7","type":"TransferFcn","name":"Process","x":435.0,"y":70.0,"w":70,"h":40,"p":{"Numerator":"[K]","Denominator":"[T 1]"}},{"id":"b8","type":"TransportDelay","name":"Dead time (P)","x":570.0,"y":70.0,"w":60,"h":40,"p":{"DelayTime":"L","InitialOutput":"0"}},{"id":"b18","type":"Step","name":"Setpoint2","x":30.0,"y":232.0,"w":40,"h":36,"p":{"Time":"1","Before":"0","After":"1"}},{"id":"b19","type":"Sum","name":"Sum2","x":117.0,"y":237.0,"w":26,"h":26,"p":{"Inputs":"|+-"}},{"id":"b20","type":"PID","name":"PI (SIMC)","x":180.0,"y":230.0,"w":120,"h":40,"p":{"Controller":"PI","Form":"Parallel","P":"Kp_PI","I":"Ki_PI","D":"0","N":"100"}},{"id":"b21","type":"Step","name":"Disturbance2","x":296.0,"y":170.0,"w":40,"h":36,"p":{"Time":"td","Before":"0","After":"d"}},{"id":"b22","type":"Sum","name":"Plant input2","x":347.0,"y":237.0,"w":26,"h":26,"p":{"Inputs":"++|"}},{"id":"b23","type":"TransferFcn","name":"Process2","x":435.0,"y":230.0,"w":70,"h":40,"p":{"Numerator":"[K]","Denominator":"[T 1]"}},{"id":"b24","type":"TransportDelay","name":"Dead time (PI)","x":570.0,"y":230.0,"w":60,"h":40,"p":{"DelayTime":"L","InitialOutput":"0"}},{"id":"b33","type":"Step","name":"Setpoint3","x":30.0,"y":392.0,"w":40,"h":36,"p":{"Time":"1","Before":"0","After":"1"}},{"id":"b34","type":"Sum","name":"Sum3","x":117.0,"y":397.0,"w":26,"h":26,"p":{"Inputs":"|+-"}},{"id":"b35","type":"PID","name":"PID (Ziegler-Nichols)","x":180.0,"y":390.0,"w":120,"h":40,"p":{"Controller":"PID","Form":"Parallel","P":"Kp_PID","I":"Ki_PID","D":"Kd_PID","N":"20"}},{"id":"b36","type":"Step","name":"Disturbance3","x":296.0,"y":330.0,"w":40,"h":36,"p":{"Time":"td","Before":"0","After":"d"}},{"id":"b37","type":"Sum","name":"Plant input3","x":347.0,"y":397.0,"w":26,"h":26,"p":{"Inputs":"++|"}},{"id":"b38","type":"TransferFcn","name":"Process3","x":435.0,"y":390.0,"w":70,"h":40,"p":{"Numerator":"[K]","Denominator":"[T 1]"}},{"id":"b39","type":"TransportDelay","name":"Dead time (PID)","x":570.0,"y":390.0,"w":60,"h":40,"p":{"DelayTime":"L","InitialOutput":"0"}}],"lines":[{"id":"l9","src":{"b":"b2","port":0},"dst":{"b":"b3","port":0}},{"id":"l10","src":{"b":"b3","port":0},"dst":{"b":"b4","port":0}},{"id":"l11","src":{"b":"b4","port":0},"dst":{"b":"b6","port":1}},{"id":"l12","src":{"b":"b5","port":0},"dst":{"b":"b6","port":0}},{"id":"l13","src":{"b":"b6","port":0},"dst":{"b":"b7","port":0}},{"id":"l14","src":{"b":"b7","port":0},"dst":{"b":"b8","port":0}},{"id":"l15","src":{"b":"b8","port":0},"dst":{"b":"b3","port":1}},{"id":"l16","src":{"b":"b8","port":0},"dst":{"b":"b1","port":0}},{"id":"l17","src":{"b":"b2","port":0},"dst":{"b":"b1","port":3},"pts":[[90,90],[90,-20],[770,-20],[770,286]]},{"id":"l25","src":{"b":"b18","port":0},"dst":{"b":"b19","port":0}},{"id":"l26","src":{"b":"b19","port":0},"dst":{"b":"b20","port":0}},{"id":"l27","src":{"b":"b20","port":0},"dst":{"b":"b22","port":1}},{"id":"l28","src":{"b":"b21","port":0},"dst":{"b":"b22","port":0}},{"id":"l29","src":{"b":"b22","port":0},"dst":{"b":"b23","port":0}},{"id":"l30","src":{"b":"b23","port":0},"dst":{"b":"b24","port":0}},{"id":"l31","src":{"b":"b24","port":0},"dst":{"b":"b19","port":1}},{"id":"l32","src":{"b":"b24","port":0},"dst":{"b":"b1","port":1}},{"id":"l40","src":{"b":"b33","port":0},"dst":{"b":"b34","port":0}},{"id":"l41","src":{"b":"b34","port":0},"dst":{"b":"b35","port":0}},{"id":"l42","src":{"b":"b35","port":0},"dst":{"b":"b37","port":1}},{"id":"l43","src":{"b":"b36","port":0},"dst":{"b":"b37","port":0}},{"id":"l44","src":{"b":"b37","port":0},"dst":{"b":"b38","port":0}},{"id":"l45","src":{"b":"b38","port":0},"dst":{"b":"b39","port":0}},{"id":"l46","src":{"b":"b39","port":0},"dst":{"b":"b34","port":1}},{"id":"l47","src":{"b":"b39","port":0},"dst":{"b":"b1","port":2}}],"settings":{"stop":"60","solver":"ode4","step":"auto","ws":"% FOPDT process: G(s) = K e^(-L s) / (T s + 1)\nK = 1;\nT = 5;\nL = 1;\n% Ziegler-Nichols open-loop (reaction curve) tuning\nKp_P   = T/(K*L);\nKp_PID = 1.2*T/(K*L);\nKi_PID = Kp_PID/(2*L);\nKd_PID = Kp_PID*0.5*L;\n% SIMC PI tuning with tau_c = L\nKp_PI = T/(K*2*L);\nKi_PI = Kp_PI/min(T, 8*L);\n% load disturbance at the process input\nd = 0.5;\ntd = 30;","name":"pid_fopdt_tuning_comparison"}}}];
+function loadModelObject(m,label){
+  pushUndo();model=JSON.parse(JSON.stringify(m));model.settings=Object.assign(emptyModel().settings,model.settings||{});
+  results=null;sel.clear();selLine=null;errIds.clear();for(const w of scopeWins.values())w.el.remove();scopeWins.clear();
+  syncStop();save();render();fitView();setStatus(`Loaded example “${label}”. Press Run, or change its parameters under Settings.`,'ok');
+}
+function menuOutside(e){if(!e.target.closest('.menu')&&!e.target.closest('#btnExample'))closeMenu();}
+function closeMenu(){const m=document.querySelector('.menu');if(m)m.remove();document.removeEventListener('pointerdown',menuOutside);$('#btnExample').setAttribute('aria-expanded','false');}
+function openExamplesMenu(){
+  closeMenu();const btn=$('#btnExample'),r=btn.getBoundingClientRect(),ar=$('#app').getBoundingClientRect();
+  const m=document.createElement('div');m.className='menu';m.setAttribute('role','menu');m.setAttribute('aria-label','Example models');
+  let html='',g=null;
+  EXAMPLES.forEach((ex,i)=>{if(ex.g!==g){g=ex.g;html+=`<div class="menu-group">${esc(g)}</div>`;}
+    html+=`<button class="menu-item" role="menuitem" data-ex="${i}"><b>${esc(ex.t)}</b><span>${esc(ex.d)}</span></button>`;});
+  m.innerHTML=html;$('#app').appendChild(m);
+  m.style.left=Math.max(4,Math.min(r.left-ar.left,ar.width-m.offsetWidth-4))+'px';m.style.top=(r.bottom-ar.top+4)+'px';
+  m.addEventListener('click',e=>{const it=e.target.closest('[data-ex]');if(!it)return;const ex=EXAMPLES[+it.dataset.ex];closeMenu();loadModelObject(ex.m,ex.t);});
+  m.addEventListener('keydown',e=>{const items=[...m.querySelectorAll('.menu-item')];const k=items.indexOf(document.activeElement);
+    if(e.key==='ArrowDown'){e.preventDefault();items[(k+1)%items.length].focus();}
+    else if(e.key==='ArrowUp'){e.preventDefault();items[(k-1+items.length)%items.length].focus();}});
+  setTimeout(()=>document.addEventListener('pointerdown',menuOutside),0);
+  btn.setAttribute('aria-expanded','true');m.querySelector('.menu-item').focus();
+}
+$('#btnExample').onclick=()=>{if(document.querySelector('.menu'))closeMenu();else openExamplesMenu();};
+$('#btnNew').onclick=()=>{pushUndo();model=emptyModel();results=null;sel.clear();selLine=null;errIds.clear();for(const w of scopeWins.values())w.el.remove();scopeWins.clear();syncStop();save();render();fitView();setStatus('New model. Use Undo to get the previous one back.');};
+$('#empty').addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(!a)return;if(a.dataset.act==='open')openPicker();else openExamplesMenu();});
+const wrap=$('#wrap');
+wrap.addEventListener('dragover',e=>{e.preventDefault();});
+wrap.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f)openFile(f);});
+new ResizeObserver(()=>{}).observe(svg);
+
+// Resizable library panel (width remembered in this browser)
+(function(){
+  const LIBW_KEY='simuwire:libw',MIN=160,MAX=520,DEF=250;
+  const main=document.querySelector('.main'),h=$('#libResize');
+  const setW=w=>{w=Math.round(Math.max(MIN,Math.min(MAX,Math.min(w,innerWidth-260))));main.style.setProperty('--libw',w+'px');h.setAttribute('aria-valuenow',w);return w;};
+  const store=w=>{try{localStorage.setItem(LIBW_KEY,String(w));}catch(e){}};
+  let cur=DEF;try{const v=parseInt(localStorage.getItem(LIBW_KEY),10);if(v)cur=v;}catch(e){}
+  cur=setW(cur);
+  h.addEventListener('pointerdown',e=>{
+    e.preventDefault();h.setPointerCapture(e.pointerId);h.classList.add('active');document.body.classList.add('resizing');
+    const x0=e.clientX,w0=cur;
+    const mv=ev=>{cur=setW(w0+ev.clientX-x0);};
+    const up=()=>{h.removeEventListener('pointermove',mv);h.removeEventListener('pointerup',up);h.removeEventListener('pointercancel',up);
+      h.classList.remove('active');document.body.classList.remove('resizing');store(cur);};
+    h.addEventListener('pointermove',mv);h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up);
+  });
+  h.addEventListener('dblclick',()=>{cur=setW(DEF);store(cur);});
+  h.addEventListener('keydown',e=>{
+    if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();cur=setW(cur+(e.key==='ArrowRight'?20:-20));store(cur);}
+  });
+})();
+
+model=load()||exampleModel();
+buildLibrary();syncStop();render();
+requestAnimationFrame(fitView);
+setStatus(model.blocks.length?'Ready. Press Run to simulate, or Open to load a saved model or an .slx file.':'Ready.');
+</script>
+</body>
+</html>

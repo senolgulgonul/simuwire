@@ -1,0 +1,294 @@
+{
+  "format": "simuwire",
+  "version": 1,
+  "model": {
+    "blocks": [
+      {
+        "id": "bmvo83k1u23",
+        "type": "Constant",
+        "name": "setpoint",
+        "x": 30,
+        "y": 63,
+        "w": 50,
+        "h": 30,
+        "p": {
+          "Value": "1"
+        },
+        "flip": false
+      },
+      {
+        "id": "bmvo83k1u24",
+        "type": "Sum",
+        "name": "Sum",
+        "x": 125,
+        "y": 65,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "bmvo83k1u25",
+        "type": "PID",
+        "name": "PID Controller",
+        "x": 190,
+        "y": 58,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Controller": "PI",
+          "Form": "Parallel",
+          "P": "0.833158676135846",
+          "I": "0.600306598212093",
+          "D": "0",
+          "N": "100"
+        },
+        "flip": false
+      },
+      {
+        "id": "bmvo83k1u26",
+        "type": "TransferFcn",
+        "name": "Transfer Fcn",
+        "x": 305,
+        "y": 58,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Numerator": "[K]",
+          "Denominator": "[T 1]"
+        },
+        "flip": false
+      },
+      {
+        "id": "bmvo83k1u27",
+        "type": "TransportDelay",
+        "name": "Transport Delay",
+        "x": 420,
+        "y": 58,
+        "w": 60,
+        "h": 40,
+        "p": {
+          "DelayTime": "L",
+          "InitialOutput": "0"
+        },
+        "flip": false
+      },
+      {
+        "id": "bmvo83k1u28",
+        "type": "Scope",
+        "name": "Scope",
+        "x": 545,
+        "y": 60,
+        "w": 36,
+        "h": 36,
+        "p": {
+          "NumInputPorts": "1"
+        },
+        "flip": false
+      },
+      {
+        "id": "bmvo83k1u35",
+        "type": "Constant",
+        "name": "setpoint1",
+        "x": 30,
+        "y": 253,
+        "w": 50,
+        "h": 30,
+        "p": {
+          "Value": "1"
+        },
+        "flip": false
+      },
+      {
+        "id": "bmvo83k1u36",
+        "type": "Sum",
+        "name": "Sum1",
+        "x": 125,
+        "y": 255,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "bmvo83k1u37",
+        "type": "PID",
+        "name": "PID Controller1",
+        "x": 190,
+        "y": 248,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Controller": "PI",
+          "Form": "Parallel",
+          "P": "0.833158676135846",
+          "I": "0.600306598212093",
+          "D": "0",
+          "N": "100"
+        },
+        "flip": false
+      },
+      {
+        "id": "bmvo83k1v38",
+        "type": "TransferFcn",
+        "name": "Transfer Fcn1",
+        "x": 305,
+        "y": 248,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Numerator": "[K]",
+          "Denominator": "[T 1]"
+        },
+        "flip": false
+      },
+      {
+        "id": "bmvo83k1v39",
+        "type": "Scope",
+        "name": "Scope1",
+        "x": 545,
+        "y": 250,
+        "w": 36,
+        "h": 36,
+        "p": {
+          "NumInputPorts": "1"
+        },
+        "flip": false
+      }
+    ],
+    "lines": [
+      {
+        "id": "lmvo83k1u29",
+        "src": {
+          "b": "bmvo83k1u23",
+          "port": 0
+        },
+        "dst": {
+          "b": "bmvo83k1u24",
+          "port": 0
+        }
+      },
+      {
+        "id": "lmvo83k1u30",
+        "src": {
+          "b": "bmvo83k1u24",
+          "port": 0
+        },
+        "dst": {
+          "b": "bmvo83k1u25",
+          "port": 0
+        }
+      },
+      {
+        "id": "lmvo83k1u31",
+        "src": {
+          "b": "bmvo83k1u25",
+          "port": 0
+        },
+        "dst": {
+          "b": "bmvo83k1u26",
+          "port": 0
+        }
+      },
+      {
+        "id": "lmvo83k1u32",
+        "src": {
+          "b": "bmvo83k1u26",
+          "port": 0
+        },
+        "dst": {
+          "b": "bmvo83k1u27",
+          "port": 0
+        }
+      },
+      {
+        "id": "lmvo83k1u33",
+        "src": {
+          "b": "bmvo83k1u27",
+          "port": 0
+        },
+        "dst": {
+          "b": "bmvo83k1u28",
+          "port": 0
+        }
+      },
+      {
+        "id": "lmvo83k1u34",
+        "src": {
+          "b": "bmvo83k1u27",
+          "port": 0
+        },
+        "dst": {
+          "b": "bmvo83k1u24",
+          "port": 1
+        }
+      },
+      {
+        "id": "lmvo83k1v40",
+        "src": {
+          "b": "bmvo83k1u35",
+          "port": 0
+        },
+        "dst": {
+          "b": "bmvo83k1u36",
+          "port": 0
+        }
+      },
+      {
+        "id": "lmvo83k1v41",
+        "src": {
+          "b": "bmvo83k1u36",
+          "port": 0
+        },
+        "dst": {
+          "b": "bmvo83k1u37",
+          "port": 0
+        }
+      },
+      {
+        "id": "lmvo83k1v42",
+        "src": {
+          "b": "bmvo83k1u37",
+          "port": 0
+        },
+        "dst": {
+          "b": "bmvo83k1v38",
+          "port": 0
+        }
+      },
+      {
+        "id": "lmvo83k1v43",
+        "src": {
+          "b": "bmvo83k1v38",
+          "port": 0
+        },
+        "dst": {
+          "b": "bmvo83k1v39",
+          "port": 0
+        }
+      },
+      {
+        "id": "lmvo83k1v44",
+        "src": {
+          "b": "bmvo83k1v38",
+          "port": 0
+        },
+        "dst": {
+          "b": "bmvo83k1u36",
+          "port": 1
+        }
+      }
+    ],
+    "settings": {
+      "stop": "10",
+      "solver": "ode4",
+      "step": "auto",
+      "ws": "K = 1;\nT = 1;\nL = 1;",
+      "name": "FOPDT_PID_example"
+    }
+  }
+}
