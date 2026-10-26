@@ -89,6 +89,24 @@ See [CHANGELOG.md](CHANGELOG.md).
 
 Everything runs in the browser. The `.slx` reader unzips the file and parses its XML; a small expression evaluator handles MATLAB-style parameters; the engine orders blocks by signal flow and integrates continuous states with a fixed-step Runge–Kutta method. The only external dependency is [JSZip](https://stuk.github.io/jszip/), loaded from a CDN, for reading `.slx` files.
 
+## Citing Simuwire
+
+Simuwire is free to use under the MIT License. If you use it in a course, a thesis or a paper, a citation is appreciated:
+
+> Gülgönül, Ş. (2026). *Simuwire: a browser-based block diagram simulator* (Version 1.2) [Computer software]. https://github.com/senolgulgonul/simuwire
+
+```bibtex
+@software{gulgonul_simuwire_2026,
+  author  = {G{\"u}lg{\"o}n{\"u}l, {\c{S}}enol},
+  title   = {Simuwire: a browser-based block diagram simulator},
+  year    = {2026},
+  version = {1.2},
+  url     = {https://github.com/senolgulgonul/simuwire}
+}
+```
+
+GitHub also shows a **Cite this repository** button for this project, generated from `CITATION.cff`.
+
 ## Disclaimer
 
 Simuwire is an independent project and is not affiliated with, endorsed by, or sponsored by The MathWorks, Inc. MATLAB and Simulink are registered trademarks of The MathWorks, Inc.

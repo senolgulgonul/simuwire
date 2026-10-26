@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use Simuwire in teaching or research, please cite it as below."
+title: "Simuwire: a browser-based block diagram simulator"
+type: software
+authors:
+  - family-names: "Gülgönül"
+    given-names: "Şenol"
+    orcid: "https://orcid.org/0000-0001-5346-4448"
+version: "1.2"
+date-released: "2026-10-25"
+license: MIT
+repository-code: "https://github.com/senolgulgonul/simuwire"
+url: "https://senolgulgonul.github.io/simuwire/"
+abstract: >-
+  Simuwire is a zero-install block diagram simulator that runs in the web
+  browser. It provides a Simulink-style editor, a PID Controller block,
+  transfer functions, transport delay and other basic blocks, fixed-step
+  Runge-Kutta simulation, and import of Simulink .slx and .mdl files. It is
+  intended for teaching introductory control systems.
+keywords:
+  - control systems
+  - simulation
+  - block diagram
+  - PID control
+  - engineering education
