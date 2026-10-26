@@ -1,0 +1,538 @@
+{
+  "format": "simuwire",
+  "version": 1,
+  "model": {
+    "blocks": [
+      {
+        "id": "b1",
+        "type": "Step",
+        "name": "Setpoint",
+        "x": 20.0,
+        "y": 40.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "Time": "0",
+          "Before": "0",
+          "After": "1"
+        },
+        "flip": false
+      },
+      {
+        "id": "b2",
+        "type": "Sum",
+        "name": "Sum",
+        "x": 100.0,
+        "y": 47.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "b3",
+        "type": "PID",
+        "name": "Continuous PI",
+        "x": 170.0,
+        "y": 40.0,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Controller": "PI",
+          "Form": "Parallel",
+          "P": "Kp",
+          "I": "Ki",
+          "D": "0",
+          "N": "100"
+        },
+        "flip": false
+      },
+      {
+        "id": "b4",
+        "type": "TransferFcn",
+        "name": "Plant (continuous)",
+        "x": 400.0,
+        "y": 40.0,
+        "w": 80,
+        "h": 40,
+        "p": {
+          "Numerator": "[1]",
+          "Denominator": "[1 2 1]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b5",
+        "type": "Sum",
+        "name": "Sum1",
+        "x": 100.0,
+        "y": 287.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "b6",
+        "type": "ZOH",
+        "name": "Sampler",
+        "x": 160.0,
+        "y": 280.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "SampleTime": "Ts"
+        },
+        "flip": false
+      },
+      {
+        "id": "b7",
+        "type": "Gain",
+        "name": "Kp",
+        "x": 250.0,
+        "y": 240.0,
+        "w": 56,
+        "h": 40,
+        "p": {
+          "Gain": "Kp"
+        },
+        "flip": false
+      },
+      {
+        "id": "b8",
+        "type": "Gain",
+        "name": "Ki*Ts",
+        "x": 250.0,
+        "y": 320.0,
+        "w": 56,
+        "h": 40,
+        "p": {
+          "Gain": "Ki*Ts"
+        },
+        "flip": false
+      },
+      {
+        "id": "b9",
+        "type": "Sum",
+        "name": "Accumulator",
+        "x": 350.0,
+        "y": 327.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|++"
+        },
+        "flip": false
+      },
+      {
+        "id": "b10",
+        "type": "UnitDelay",
+        "name": "Unit Delay",
+        "x": 395.0,
+        "y": 380.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "InitialCondition": "0",
+          "SampleTime": "Ts"
+        },
+        "flip": true
+      },
+      {
+        "id": "b11",
+        "type": "Sum",
+        "name": "u[k]",
+        "x": 430.0,
+        "y": 247.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|++"
+        },
+        "flip": false
+      },
+      {
+        "id": "b12",
+        "type": "TransferFcn",
+        "name": "Plant (digital)",
+        "x": 500.0,
+        "y": 240.0,
+        "w": 80,
+        "h": 40,
+        "p": {
+          "Numerator": "[1]",
+          "Denominator": "[1 2 1]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b13",
+        "type": "Scope",
+        "name": "Output",
+        "x": 650.0,
+        "y": 120.0,
+        "w": 36,
+        "h": 36,
+        "p": {
+          "NumInputPorts": "2"
+        },
+        "flip": false
+      },
+      {
+        "id": "b14",
+        "type": "Scope",
+        "name": "Control signal",
+        "x": 650.0,
+        "y": 180.0,
+        "w": 36,
+        "h": 36,
+        "p": {
+          "NumInputPorts": "2"
+        },
+        "flip": false
+      }
+    ],
+    "lines": [
+      {
+        "id": "l30",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 0
+        }
+      },
+      {
+        "id": "l31",
+        "src": {
+          "b": "b2",
+          "port": 0
+        },
+        "dst": {
+          "b": "b3",
+          "port": 0
+        }
+      },
+      {
+        "id": "l32",
+        "src": {
+          "b": "b3",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 0
+        }
+      },
+      {
+        "id": "l33",
+        "src": {
+          "b": "b4",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 1
+        },
+        "pts": [
+          [
+            500,
+            60
+          ],
+          [
+            500,
+            110
+          ],
+          [
+            113,
+            110
+          ]
+        ]
+      },
+      {
+        "id": "l34",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b5",
+          "port": 0
+        },
+        "pts": [
+          [
+            80,
+            60
+          ],
+          [
+            80,
+            300
+          ]
+        ]
+      },
+      {
+        "id": "l35",
+        "src": {
+          "b": "b5",
+          "port": 0
+        },
+        "dst": {
+          "b": "b6",
+          "port": 0
+        }
+      },
+      {
+        "id": "l36",
+        "src": {
+          "b": "b6",
+          "port": 0
+        },
+        "dst": {
+          "b": "b7",
+          "port": 0
+        },
+        "pts": [
+          [
+            225,
+            300
+          ],
+          [
+            225,
+            260
+          ]
+        ]
+      },
+      {
+        "id": "l37",
+        "src": {
+          "b": "b6",
+          "port": 0
+        },
+        "dst": {
+          "b": "b8",
+          "port": 0
+        },
+        "pts": [
+          [
+            225,
+            300
+          ],
+          [
+            225,
+            340
+          ]
+        ]
+      },
+      {
+        "id": "l38",
+        "src": {
+          "b": "b8",
+          "port": 0
+        },
+        "dst": {
+          "b": "b9",
+          "port": 0
+        }
+      },
+      {
+        "id": "l39",
+        "src": {
+          "b": "b9",
+          "port": 0
+        },
+        "dst": {
+          "b": "b10",
+          "port": 0
+        },
+        "pts": [
+          [
+            443,
+            340
+          ],
+          [
+            443,
+            400
+          ]
+        ]
+      },
+      {
+        "id": "l40",
+        "src": {
+          "b": "b10",
+          "port": 0
+        },
+        "dst": {
+          "b": "b9",
+          "port": 1
+        },
+        "pts": [
+          [
+            363,
+            400
+          ]
+        ]
+      },
+      {
+        "id": "l41",
+        "src": {
+          "b": "b7",
+          "port": 0
+        },
+        "dst": {
+          "b": "b11",
+          "port": 0
+        }
+      },
+      {
+        "id": "l42",
+        "src": {
+          "b": "b9",
+          "port": 0
+        },
+        "dst": {
+          "b": "b11",
+          "port": 1
+        },
+        "pts": [
+          [
+            443,
+            340
+          ]
+        ]
+      },
+      {
+        "id": "l43",
+        "src": {
+          "b": "b11",
+          "port": 0
+        },
+        "dst": {
+          "b": "b12",
+          "port": 0
+        }
+      },
+      {
+        "id": "l44",
+        "src": {
+          "b": "b12",
+          "port": 0
+        },
+        "dst": {
+          "b": "b5",
+          "port": 1
+        },
+        "pts": [
+          [
+            605,
+            260
+          ],
+          [
+            605,
+            440
+          ],
+          [
+            113,
+            440
+          ]
+        ]
+      },
+      {
+        "id": "l45",
+        "src": {
+          "b": "b4",
+          "port": 0
+        },
+        "dst": {
+          "b": "b13",
+          "port": 0
+        },
+        "pts": [
+          [
+            500,
+            60
+          ],
+          [
+            500,
+            132
+          ]
+        ]
+      },
+      {
+        "id": "l46",
+        "src": {
+          "b": "b12",
+          "port": 0
+        },
+        "dst": {
+          "b": "b13",
+          "port": 1
+        },
+        "pts": [
+          [
+            605,
+            260
+          ],
+          [
+            605,
+            144
+          ]
+        ]
+      },
+      {
+        "id": "l47",
+        "src": {
+          "b": "b3",
+          "port": 0
+        },
+        "dst": {
+          "b": "b14",
+          "port": 0
+        },
+        "pts": [
+          [
+            290,
+            60
+          ],
+          [
+            290,
+            192
+          ]
+        ]
+      },
+      {
+        "id": "l48",
+        "src": {
+          "b": "b11",
+          "port": 0
+        },
+        "dst": {
+          "b": "b14",
+          "port": 1
+        },
+        "pts": [
+          [
+            475,
+            260
+          ],
+          [
+            475,
+            204
+          ]
+        ]
+      }
+    ],
+    "settings": {
+      "stop": "20",
+      "solver": "ode4",
+      "step": "auto",
+      "ws": "% Plant G(s) = 1/(s+1)^2, PI controller with the same gains in both loops\nKp = 2;     % proportional gain\nKi = 1;     % integral gain (1/s)\n% Digital PI: e[k] = e(k*Ts), I[k] = I[k-1] + Ki*Ts*e[k], u[k] = Kp*e[k] + I[k]\nTs = 0.5;   % sample time (s), try 0.1, 0.5, 1 and 2",
+      "name": "digital_vs_continuous_pi"
+    }
+  }
+}

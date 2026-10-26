@@ -81,6 +81,8 @@ pid('PID: PID ideal form',{Controller:'PID',Form:'Ideal',P:'2',I:'0.5',D:'0.1',N
   out.push(['Relay on-off loop (limit cycle)',err<=3e-3?'PASS':'FAIL',`band ${lo.toFixed(4)}…${hi.toFixed(4)}, max error ${err.toExponential(2)}`]);}
  catch(e){out.push(['Relay on-off loop (limit cycle)','FAIL','error: '+e.message]);}}
 {const m=mk(2);const c=add(m,'Constant');const r=add(m,'Relay',{OnSwitchValue:'-1',OffSwitchValue:'1'});const s=add(m,'Scope');wire(m,c,r);wire(m,r,s);try{simulate(m);out.push(['Relay bad switch points rejected','FAIL','no error']);}catch(e){out.push(['Relay bad switch points rejected',/switch-off point/.test(e.message)?'PASS':'FAIL',e.message]);}}
+// Model variables: a ';' inside a comment must not split the line
+{const m=mk(1);m.settings.ws='K = 3;   % gain (V); see notes\nB = K*2; C = 1';const c=add(m,'Constant',{Value:'B+C'});const s=add(m,'Scope');wire(m,c,s);check('Variables: ; in comment',m,s,[[0,7],[1,7]]);}
 // 15 Switch
 for(const [cr,lab,f] of [['u2 >= Threshold','u2 ≥ threshold',t=>t>=2?1:-1],['u2 > Threshold','u2 > threshold',t=>t>2?1:-1],['u2 ~= 0','u2 ≠ 0',t=>t!==0?1:-1]]){
  const m=mk(4,'','0.5');const a=add(m,'Constant',{Value:'1'}),c=add(m,'Clock'),b=add(m,'Constant',{Value:'-1'});const sw=add(m,'Switch',{Criteria:cr,Threshold:'2'});const s=add(m,'Scope');

@@ -13,6 +13,16 @@ Every model here is also built into the app: click **Examples** in the toolbar a
 | `basics/05_saturation_and_dead_zone.json` | A sine wave passed through Saturation (±1) and Dead Zone (±0.5), plotted together. |
 | `basics/06_sample_and_hold.json` | Sampling a sine with a Zero-Order Hold and delaying it by one sample with a Unit Delay (Ts = 0.5 s). |
 
+## Discrete control
+
+| File | What it shows |
+|---|---|
+| `discrete/digital_vs_continuous_pi.json` | The same PI controller (Kp = 2, Ki = 1) on the plant 1/(s+1)², once continuous and once digital with sample time Ts. |
+
+The digital PI is built from basic blocks so the difference equation is visible: the Zero-Order Hold samples the error, e[k] = e(kTs); the accumulator (a Sum with a Unit Delay in its feedback path) computes I[k] = I[k−1] + Ki·Ts·e[k]; and u[k] = Kp·e[k] + I[k]. Because both the sampler and the Unit Delay update only at multiples of Ts, u[k] is held constant between samples, which is the staircase in the Control signal scope.
+
+What to look for: change Ts in Model variables. The continuous loop overshoots by about 6 %. With the same gains the digital loop overshoots by about 9 % at Ts = 0.1, 22 % at Ts = 0.5, 44 % at Ts = 1 and 74 % at Ts = 1.5, and at Ts = 2 it is unstable. Sampling adds delay to the loop, roughly Ts/2, and gains tuned for the continuous controller lose their margin as Ts grows.
+
 ## On-off control
 
 | File | What it shows |

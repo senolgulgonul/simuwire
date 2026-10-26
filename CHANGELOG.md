@@ -2,6 +2,12 @@
 
 Versions follow MAJOR.MINOR.PATCH: a new feature raises MINOR (1.1 → 1.2), a bug fix raises PATCH (1.1 → 1.1.1).
 
+## v1.5 (2026-10-26)
+
+- New example: digital vs continuous PI (Examples → Discrete control). The same PI gains run as a continuous controller and as a sampled controller built from a Zero-Order Hold, two Gains and a Unit Delay accumulator. Raising the sample time increases the overshoot, and at Ts = 2 the digital loop becomes unstable.
+- Fixed: in Model variables, a `;` inside a `%` comment split the line and caused an error. Comments are now removed before the line is split.
+- One new test for the comment fix (51 tests in total).
+
 ## v1.4.1 (2026-10-26)
 
 - The Scope window no longer has a Fit button: double-click the plot to see the whole signal. The Fit button in the main toolbar stays.
