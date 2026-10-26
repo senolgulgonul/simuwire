@@ -18,7 +18,7 @@ Click **Examples** to load one of the built-in models. The same models are also 
 - Simulink-style editor: block library, drag-and-drop, orthogonal wiring, branches, draggable wire segments, block flipping, undo
 - Fixed-step solvers: `ode4` (Runge–Kutta, default) and `ode1` (Euler), with automatic step selection
 - MATLAB-style parameters: numbers, vectors like `[T 1]`, expressions like `2*K`, and model variables defined once in Settings
-- Scope windows with multiple inputs, hover readout, and a black-and-white style that prints well
+- Scope windows with multiple inputs, hover readout, zoom (mouse wheel), pan (drag) and Fit, and a black-and-white style that prints well
 - Opens Simulink `.slx` files (both the current and the older layout) and classic `.mdl` files: blocks, positions, connections, model workspace variables and stop time are read automatically
 - Saves models as `.json` files; the current model is also kept in the browser between sessions
 - Detects algebraic loops and unconnected inputs, and highlights the block that caused an error
@@ -67,6 +67,8 @@ Simulink files are only read, never modified. Variables in `.mdl` files and olde
 | Enter | Open the selected block’s parameters |
 | Space | Fit the model to the view |
 
+In a Scope window, scroll to zoom (over an axis, only that axis zooms), drag to pan, and press **Fit** or double-click the plot to see the whole signal.
+
 Drag a wire segment to move it, double-click a wire to return it to automatic routing, and Ctrl+drag a wire to branch it.
 
 ## Hosting on GitHub Pages
@@ -95,14 +97,14 @@ Everything runs in the browser. The `.slx` reader unzips the file and parses its
 
 Simuwire is free to use under the MIT License. If you use it in a course, a thesis or a paper, a citation is appreciated:
 
-> Gülgönül, Ş. (2026). *Simuwire: a browser-based block diagram simulator* (Version 1.3.1) [Computer software]. https://github.com/senolgulgonul/simuwire
+> Gülgönül, Ş. (2026). *Simuwire: a browser-based block diagram simulator* (Version 1.4) [Computer software]. https://github.com/senolgulgonul/simuwire
 
 ```bibtex
 @software{gulgonul_simuwire_2026,
   author  = {G{\"u}lg{\"o}n{\"u}l, {\c{S}}enol},
   title   = {Simuwire: a browser-based block diagram simulator},
   year    = {2026},
-  version = {1.3.1},
+  version = {1.4},
   url     = {https://github.com/senolgulgonul/simuwire}
 }
 ```

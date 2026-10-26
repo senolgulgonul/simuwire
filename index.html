@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Simuwire v1.3.1 – block diagram simulator</title>
+<title>Simuwire v1.4 – block diagram simulator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
@@ -152,9 +152,10 @@ body.resizing{cursor:col-resize;user-select:none}
   background:#ffffff;border:1px solid #9a9a9a;border-radius:5px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:grid;grid-template-rows:auto 1fr auto;color:#111111}
 .scope header{display:flex;align-items:center;gap:6px;padding:5px 6px 5px 10px;background:#ececec;border-bottom:1px solid #c8c8c8;cursor:move;touch-action:none;user-select:none}
 .scope header b{flex:1;font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.scope header button{height:24px;min-width:26px;border:1px solid #b5b5b5;background:#ffffff;border-radius:3px;color:#111111;cursor:pointer;font-size:12.5px;padding:0 7px}
+.scope header button{display:inline-flex;align-items:center;gap:4px;height:24px;min-width:26px;border:1px solid #b5b5b5;background:#ffffff;border-radius:3px;color:#111111;cursor:pointer;font-size:12.5px;padding:0 7px}
 .scope header button:hover{background:#f3f3f3}
-.scope canvas{width:100%;height:100%;display:block}
+.scope canvas{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.scope canvas.pan{cursor:grabbing}
 .scope footer{padding:3px 10px;font-size:12.5px;color:#333333;background:#f6f6f6;border-top:1px solid #dddddd;min-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 
 .ghost{position:fixed;z-index:60;pointer-events:none;opacity:.85}
@@ -185,9 +186,9 @@ body.resizing{cursor:col-resize;user-select:none}
 <body>
 <div id="app">
   <header class="toolbar">
-    <div class="brand" aria-label="Simuwire v1.3.1">
+    <div class="brand" aria-label="Simuwire v1.4">
       <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="1.5" y="5" width="7" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 10h4" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.5l2.5 2.5-2.5 2.5z" fill="currentColor"/><rect x="14.5" y="5" width="4" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span>Simuwire</span><small class="ver">v1.3.1</small>
+      <span>Simuwire</span><small class="ver">v1.4</small>
     </div>
     <button class="tb only-narrow" id="btnLib" title="Block library"><svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.6"/></svg></button>
     <button class="tb" id="btnNew" title="New model"><svg viewBox="0 0 16 16"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M9.5 1.5v3h3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg><span class="lbl">New</span></button>
@@ -1174,11 +1175,11 @@ const REPO_URL='https://github.com/senolgulgonul/simuwire';
 function openHelp(){
   const rows=[['Add a block','Drag it from the library onto the canvas, or click it.'],['Connect','Hover a block to see its ports, then drag from an output port to another block’s input. To feed one output to several blocks, drag from the output port again, or Ctrl+drag its existing line.'],['Route lines','Drag any line segment up, down, left or right to move it. Double-click a line to return it to automatic routing.'],['Save','Save writes the model to a .json file you can open later with Open. Changes are also kept automatically in this browser.'],
     ['Resize','Select a block and drag one of its corner handles.'],['Parameters','Double-click a block (or select it and press Enter). For a Scope this opens the plot window.'],['Move and pan','Drag blocks to move them; drag empty space to pan; use the wheel to zoom.'],
-    ['Delete','Deletes the selected block or line.'],['Ctrl+I','Flips the selected block horizontally (for feedback paths).'],['Ctrl+T','Runs the simulation.'],['Ctrl+Z','Undo.'],['Ctrl+S','Saves the model to a file.'],['Space','Fits the model to the view.'],['Shift+click','Selects several blocks.']];
+    ['Delete','Deletes the selected block or line.'],['Ctrl+I','Flips the selected block horizontally (for feedback paths).'],['Ctrl+T','Runs the simulation.'],['Ctrl+Z','Undo.'],['Ctrl+S','Saves the model to a file.'],['Space','Fits the model to the view.'],['Scope','Scroll to zoom (over an axis: that axis only), drag to pan, Fit or double-click to see the whole signal.'],['Shift+click','Selects several blocks.']];
   dialog('Help and about',`<table class="keys">${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>
     <p class="hint" style="margin-top:12px">Your model is saved automatically in this browser. .slx files are read only; subsystems and unsupported blocks appear with a dashed outline.</p>
     <fieldset class="desc" style="margin:14px 0 0"><legend>About</legend>
-      <p><b style="color:var(--text)">Simuwire v1.3.1</b>, block diagram simulation in your browser.<br>Created by Şenol Gülgönül. Open source under the MIT License.${REPO_URL?`<br><a href="${esc(REPO_URL)}" target="_blank" rel="noopener">Source code and examples on GitHub</a>`:''}</p>
+      <p><b style="color:var(--text)">Simuwire v1.4</b>, block diagram simulation in your browser.<br>Created by Şenol Gülgönül. Open source under the MIT License.${REPO_URL?`<br><a href="${esc(REPO_URL)}" target="_blank" rel="noopener">Source code and examples on GitHub</a>`:''}</p>
       <p style="margin-top:6px;font-size:12px">Not affiliated with The MathWorks, Inc. MATLAB and Simulink are registered trademarks of The MathWorks, Inc.</p>
     </fieldset>`,{cancel:false});
 }
@@ -1195,27 +1196,55 @@ function openScope(id){
   let w=scopeWins.get(id);
   if(!w){
     const el=document.createElement('section');el.className='scope';el.setAttribute('aria-label','Scope: '+b.name);
-    el.innerHTML=`<header><b></b><button data-a="params" title="Scope parameters">Settings</button><button data-a="close" title="Close" aria-label="Close">✕</button></header><canvas></canvas><footer>&nbsp;</footer>`;
+    el.innerHTML=`<header><b></b><button data-a="fit" title="Show the whole signal (double-click the plot)"><svg viewBox="0 0 16 16" width="13" height="13"><path d="M1.5 5V1.5H5M11 1.5h3.5V5M14.5 11v3.5H11M5 14.5H1.5V11" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Fit</button><button data-a="params" title="Scope parameters">Settings</button><button data-a="close" title="Close" aria-label="Close">✕</button></header><canvas></canvas><footer>&nbsp;</footer>`;
     const app=$('#app');app.appendChild(el);
     const ar=app.getBoundingClientRect();const n=scopeCount++%5;
     if(ar.width<=760){el.style.left=Math.max(4,(ar.width-el.offsetWidth)/2)+'px';el.style.top=Math.max(44,ar.height-el.offsetHeight-40-n*20)+'px';}
     else{el.style.left=Math.max(4,ar.width-el.offsetWidth-16-n*40)+'px';
     el.style.top=Math.max(44,Math.min(ar.height-el.offsetHeight-36,52+n*44))+'px';}
-    w={el,canvas:el.querySelector('canvas'),title:el.querySelector('b'),foot:el.querySelector('footer'),id,hover:null};
+    w={el,canvas:el.querySelector('canvas'),title:el.querySelector('b'),foot:el.querySelector('footer'),id,hover:null,view:null};
     w.title.textContent=b.name;scopeWins.set(id,w);
     el.querySelector('[data-a="close"]').onclick=()=>{el.remove();scopeWins.delete(id);};
     el.querySelector('[data-a="params"]').onclick=()=>openParams(id);
+    el.querySelector('[data-a="fit"]').onclick=()=>{w.view=null;drawScope(w);};
+    scopeNav(w);
     el.addEventListener('pointerdown',()=>{el.style.zIndex=++scopeZ;});
     const hd=el.querySelector('header');
     hd.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;hd.setPointerCapture(e.pointerId);const sx=e.clientX-el.offsetLeft,sy=e.clientY-el.offsetTop;
       const mv=ev=>{el.style.left=(ev.clientX-sx)+'px';el.style.top=Math.max(0,ev.clientY-sy)+'px';};
       const up=()=>{hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);};
       hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);});
-    w.canvas.addEventListener('pointermove',e=>{const r=w.canvas.getBoundingClientRect();w.hover=e.clientX-r.left;drawScope(w);});
-    w.canvas.addEventListener('pointerleave',()=>{w.hover=null;drawScope(w);});
     new ResizeObserver(()=>drawScope(w)).observe(el);
   }
   w.el.style.zIndex=++scopeZ;drawScope(w);
+}
+// Scope navigation: the wheel zooms around the pointer (over the time axis only time, over the value axis only
+// values), a left drag pans, and Fit or a double-click returns to the whole signal. w.view is null when fitted.
+function scopeNav(w){
+  const c=w.canvas;
+  const pos=e=>{const r=c.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};};
+  const cur=()=>w.view||w.full;
+  c.addEventListener('wheel',e=>{
+    const a=w.area;if(!a||!w.full)return;e.preventDefault();
+    const {x,y}=pos(e),v={...cur()},f=Math.pow(1.0015,e.deltaY*(e.deltaMode===1?33:1));
+    const inX=x>=a.L,inY=y<=a.T+a.ph;   // left of the plot: values only; below it: time only
+    const fx=Math.min(1,Math.max(0,(x-a.L)/a.pw)),fy=Math.min(1,Math.max(0,1-(y-a.T)/a.ph));
+    const F=w.full,minT=(F.t1-F.t0)*1e-6||1e-9,minY=(F.y1-F.y0)*1e-6||1e-9;
+    if(inX){const tc=v.t0+fx*(v.t1-v.t0),sp=Math.max(minT,(v.t1-v.t0)*f);v.t0=tc-fx*sp;v.t1=v.t0+sp;}
+    if(inY){const yc=v.y0+fy*(v.y1-v.y0),sp=Math.max(minY,(v.y1-v.y0)*f);v.y0=yc-fy*sp;v.y1=v.y0+sp;}
+    w.view=v;drawScope(w);
+  },{passive:false});
+  c.addEventListener('pointerdown',e=>{
+    if(e.button!==0||!w.area||!w.full)return;c.setPointerCapture(e.pointerId);c.classList.add('pan');
+    const p0=pos(e),v0={...cur()},a=w.area;
+    const mv=ev=>{const p=pos(ev),dt=(p.x-p0.x)/a.pw*(v0.t1-v0.t0),dy=(p.y-p0.y)/a.ph*(v0.y1-v0.y0);
+      w.view={t0:v0.t0-dt,t1:v0.t1-dt,y0:v0.y0+dy,y1:v0.y1+dy};w.hover=p.x;drawScope(w);};
+    const up=()=>{c.classList.remove('pan');c.removeEventListener('pointermove',mv);c.removeEventListener('pointerup',up);c.removeEventListener('pointercancel',up);};
+    c.addEventListener('pointermove',mv);c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up);
+  });
+  c.addEventListener('pointermove',e=>{if(c.classList.contains('pan'))return;w.hover=pos(e).x;drawScope(w);});
+  c.addEventListener('pointerleave',()=>{w.hover=null;drawScope(w);});
+  c.addEventListener('dblclick',()=>{w.view=null;drawScope(w);});
 }
 function niceTicks(a,b,n){
   const span=b-a||1,raw=span/n,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;
@@ -1233,10 +1262,13 @@ function drawScope(w){
   g.font='12px "Source Sans 3", "Segoe UI", Helvetica, Arial, sans-serif';
   if(!data||!data.t.length){g.fillStyle='#666666';g.textAlign='center';g.fillText('No data yet. Run the simulation.',W/2,H/2);w.foot.textContent='\u00a0';return;}
   const L=50,R=14,T=data.ys.length>1?30:12,B=26,pw=W-L-R,ph=H-T-B;
-  const t=data.t,t0=t[0],t1=t[t.length-1]||1;
-  let y0=Infinity,y1=-Infinity;for(const ys of data.ys)for(const v of ys){if(v<y0)y0=v;if(v>y1)y1=v;}
-  if(!isFinite(y0)){y0=-1;y1=1;}
-  if(y1-y0<1e-12){y0-=1;y1+=1;}else{const pad=(y1-y0)*.08;y0-=pad;y1+=pad;}
+  const t=data.t;
+  {let a=Infinity,b=-Infinity;for(const ys of data.ys)for(const v of ys){if(v<a)a=v;if(v>b)b=v;}
+    if(!isFinite(a)){a=-1;b=1;}
+    if(b-a<1e-12){a-=1;b+=1;}else{const pad=(b-a)*.08;a-=pad;b+=pad;}
+    w.full={t0:t[0],t1:t[t.length-1]||1,y0:a,y1:b};}
+  w.area={L,T,pw,ph};
+  const {t0,t1,y0,y1}=w.view||w.full;
   const X=v=>L+(v-t0)/(t1-t0||1)*pw,Y=v=>T+(1-(v-y0)/(y1-y0))*ph;
   g.strokeStyle='#d9d9d9';g.lineWidth=1;g.fillStyle='#222222';g.textAlign='center';g.textBaseline='top';
   for(const v of niceTicks(t0,t1,Math.max(2,Math.floor(pw/80)))){const x=Math.round(X(v))+.5;g.beginPath();g.moveTo(x,T);g.lineTo(x,T+ph);g.stroke();g.fillText(tickLbl(v),x,T+ph+5);}
@@ -1244,10 +1276,13 @@ function drawScope(w){
   for(const v of niceTicks(y0,y1,Math.max(2,Math.floor(ph/45)))){const y=Math.round(Y(v))+.5;g.beginPath();g.moveTo(L,y);g.lineTo(L+pw,y);g.stroke();g.fillText(tickLbl(v),L-6,y);}
   g.strokeStyle='#000000';g.strokeRect(L+.5,T+.5,pw,ph);
   g.save();g.beginPath();g.rect(L,T,pw,ph);g.clip();
-  const step=Math.max(1,Math.floor(t.length/(pw*3)));
+  // draw only the visible samples (plus one on each side), thinned to about three per pixel
+  const idxAt=tv=>{let lo=0,hi=t.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(t[m]<=tv)lo=m;else hi=m;}return lo;};
+  const i0=Math.max(0,idxAt(t0)-1),i1=Math.min(t.length-1,idxAt(t1)+2);
+  const step=Math.max(1,Math.floor((i1-i0)/(pw*3)));
   data.ys.forEach((ys,k)=>{g.strokeStyle='#000000';g.lineWidth=1.6;g.setLineDash(SCOPE_DASH[k%SCOPE_DASH.length]);g.beginPath();
-    for(let i=0;i<t.length;i+=step){const x=X(t[i]),y=Y(ys[i]);if(i)g.lineTo(x,y);else g.moveTo(x,y);}
-    const j=t.length-1;g.lineTo(X(t[j]),Y(ys[j]));g.stroke();});
+    for(let i=i0;i<=i1;i+=step){const x=X(t[i]),y=Y(ys[i]);if(i>i0)g.lineTo(x,y);else g.moveTo(x,y);}
+    g.lineTo(X(t[i1]),Y(ys[i1]));g.stroke();});
   g.setLineDash([]);
   g.restore();
   if(data.ys.length>1){g.textAlign='left';g.textBaseline='middle';let lx=L,ly=14;
@@ -1255,8 +1290,9 @@ function drawScope(w){
   if(w.hover!=null&&w.hover>=L&&w.hover<=L+pw){
     const tv=t0+(w.hover-L)/pw*(t1-t0);let lo=0,hi=t.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(t[m]<=tv)lo=m;else hi=m;}
     const i=Math.abs(t[hi]-tv)<Math.abs(t[lo]-tv)?hi:lo;
+    g.save();g.beginPath();g.rect(L,T,pw,ph);g.clip();
     g.strokeStyle='rgba(0,0,0,.45)';g.setLineDash([3,3]);g.beginPath();g.moveTo(X(t[i])+.5,T);g.lineTo(X(t[i])+.5,T+ph);g.stroke();g.setLineDash([]);
-    data.ys.forEach((ys,k)=>{g.fillStyle='#ffffff';g.strokeStyle='#000000';g.lineWidth=1.4;g.beginPath();g.arc(X(t[i]),Y(ys[i]),3.2,0,7);g.fill();g.stroke();});
+    data.ys.forEach((ys,k)=>{g.fillStyle='#ffffff';g.strokeStyle='#000000';g.lineWidth=1.4;g.beginPath();g.arc(X(t[i]),Y(ys[i]),3.2,0,7);g.fill();g.stroke();});g.restore();
     w.foot.textContent=`t = ${fmtVal(t[i])} s   `+data.ys.map((ys,k)=>`${data.labels[k]}: ${fmtVal(ys[i])}`).join('   ');
   }else{
     w.foot.textContent=data.ys.map((ys,k)=>{let mx=-Infinity;for(const v of ys)if(v>mx)mx=v;return `${data.labels[k]}: final ${fmtVal(ys[ys.length-1])}, max ${fmtVal(mx)}`;}).join('   ');
