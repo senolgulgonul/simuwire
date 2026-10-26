@@ -83,6 +83,19 @@ pid('PID: PID ideal form',{Controller:'PID',Form:'Ideal',P:'2',I:'0.5',D:'0.1',N
 {const m=mk(2);const c=add(m,'Constant');const r=add(m,'Relay',{OnSwitchValue:'-1',OffSwitchValue:'1'});const s=add(m,'Scope');wire(m,c,r);wire(m,r,s);try{simulate(m);out.push(['Relay bad switch points rejected','FAIL','no error']);}catch(e){out.push(['Relay bad switch points rejected',/switch-off point/.test(e.message)?'PASS':'FAIL',e.message]);}}
 // Model variables: a ';' inside a comment must not split the line
 {const m=mk(1);m.settings.ws='K = 3;   % gain (V); see notes\nB = K*2; C = 1';const c=add(m,'Constant',{Value:'B+C'});const s=add(m,'Scope');wire(m,c,s);check('Variables: ; in comment',m,s,[[0,7],[1,7]]);}
+// 14c Sample and hold around a continuous PI (ZOH on the measurement and on the controller output) must match the
+// Forward Euler difference equation built from a Unit Delay: I[k+1] = I[k] + Ki·Ts·e[k], u[k] = Kp·e[k] + I[k].
+// The held error is integrated over one sample period, which adds exactly Ts·e[k] to the integral.
+{const m=mk(20,'Ts = 0.5','0.02');
+ const sp=add(m,'Constant',{Value:'1'});
+ const s1=add(m,'Sum',{Inputs:'|+-'}),pi=add(m,'PID',{Controller:'PI',P:'2',I:'1'}),dac=add(m,'ZOH',{SampleTime:'Ts'}),g1=add(m,'TransferFcn',{Numerator:'[1]',Denominator:'[1 2 1]'}),adc=add(m,'ZOH',{SampleTime:'Ts'});
+ wire(m,sp,s1,0);wire(m,s1,pi);wire(m,pi,dac);wire(m,dac,g1);wire(m,g1,adc);wire(m,adc,s1,1);
+ const s2=add(m,'Sum',{Inputs:'|+-'}),z=add(m,'ZOH',{SampleTime:'Ts'}),kp=add(m,'Gain',{Gain:'2'}),ki=add(m,'Gain',{Gain:'1*Ts'}),acc=add(m,'Sum',{Inputs:'|++'}),ud=add(m,'UnitDelay',{SampleTime:'Ts'}),us=add(m,'Sum',{Inputs:'|++'}),g2=add(m,'TransferFcn',{Numerator:'[1]',Denominator:'[1 2 1]'});
+ wire(m,sp,s2,0);wire(m,s2,z);wire(m,z,kp);wire(m,z,ki);wire(m,ki,acc,0);wire(m,ud,acc,1);wire(m,acc,ud);wire(m,kp,us,0);wire(m,ud,us,1);wire(m,us,g2);wire(m,g2,s2,1);
+ const sc=add(m,'Scope',{NumInputPorts:'2'});wire(m,g1,sc,0);wire(m,g2,sc,1);
+ try{const r=simulate(m).scopes[sc.id];let err=0;for(let i=0;i<r.t.length;i++)err=Math.max(err,Math.abs(r.ys[0][i]-r.ys[1][i]));
+  out.push(['ZOH + PI + ZOH = difference equation',err<=1e-6?'PASS':'FAIL',`max difference ${err.toExponential(2)}`]);}
+ catch(e){out.push(['ZOH + PI + ZOH = difference equation','FAIL','error: '+e.message]);}}
 // 15 Switch
 for(const [cr,lab,f] of [['u2 >= Threshold','u2 ≥ threshold',t=>t>=2?1:-1],['u2 > Threshold','u2 > threshold',t=>t>2?1:-1],['u2 ~= 0','u2 ≠ 0',t=>t!==0?1:-1]]){
  const m=mk(4,'','0.5');const a=add(m,'Constant',{Value:'1'}),c=add(m,'Clock'),b=add(m,'Constant',{Value:'-1'});const sw=add(m,'Switch',{Criteria:cr,Threshold:'2'});const s=add(m,'Scope');

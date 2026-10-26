@@ -1,0 +1,408 @@
+{
+  "format": "simuwire",
+  "version": 1,
+  "model": {
+    "blocks": [
+      {
+        "id": "b1",
+        "type": "Step",
+        "name": "Setpoint",
+        "x": 20.0,
+        "y": 40.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "Time": "0",
+          "Before": "0",
+          "After": "1"
+        },
+        "flip": false
+      },
+      {
+        "id": "b2",
+        "type": "Sum",
+        "name": "Sum",
+        "x": 100.0,
+        "y": 47.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "b3",
+        "type": "PID",
+        "name": "PI Controller",
+        "x": 170.0,
+        "y": 40.0,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Controller": "PI",
+          "Form": "Parallel",
+          "P": "Kp",
+          "I": "Ki",
+          "D": "0",
+          "N": "100"
+        },
+        "flip": false
+      },
+      {
+        "id": "b4",
+        "type": "TransferFcn",
+        "name": "Plant",
+        "x": 330.0,
+        "y": 40.0,
+        "w": 80,
+        "h": 40,
+        "p": {
+          "Numerator": "[1]",
+          "Denominator": "[1 2 1]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b5",
+        "type": "Sum",
+        "name": "Sum1",
+        "x": 100.0,
+        "y": 197.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "b6",
+        "type": "PID",
+        "name": "PI Controller1",
+        "x": 170.0,
+        "y": 190.0,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Controller": "PI",
+          "Form": "Parallel",
+          "P": "Kp",
+          "I": "Ki",
+          "D": "0",
+          "N": "100"
+        },
+        "flip": false
+      },
+      {
+        "id": "b7",
+        "type": "ZOH",
+        "name": "DAC (ZOH)",
+        "x": 280.0,
+        "y": 190.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "SampleTime": "Ts"
+        },
+        "flip": false
+      },
+      {
+        "id": "b8",
+        "type": "TransferFcn",
+        "name": "Plant1",
+        "x": 360.0,
+        "y": 190.0,
+        "w": 80,
+        "h": 40,
+        "p": {
+          "Numerator": "[1]",
+          "Denominator": "[1 2 1]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b9",
+        "type": "ZOH",
+        "name": "ADC (ZOH)",
+        "x": 280.0,
+        "y": 250.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "SampleTime": "Ts"
+        },
+        "flip": true
+      },
+      {
+        "id": "b10",
+        "type": "Scope",
+        "name": "Output",
+        "x": 540.0,
+        "y": 72.0,
+        "w": 36,
+        "h": 36,
+        "p": {
+          "NumInputPorts": "2"
+        },
+        "flip": false
+      },
+      {
+        "id": "b11",
+        "type": "Scope",
+        "name": "Control signal",
+        "x": 540.0,
+        "y": 150.0,
+        "w": 36,
+        "h": 36,
+        "p": {
+          "NumInputPorts": "2"
+        },
+        "flip": false
+      }
+    ],
+    "lines": [
+      {
+        "id": "l30",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 0
+        }
+      },
+      {
+        "id": "l31",
+        "src": {
+          "b": "b2",
+          "port": 0
+        },
+        "dst": {
+          "b": "b3",
+          "port": 0
+        }
+      },
+      {
+        "id": "l32",
+        "src": {
+          "b": "b3",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 0
+        }
+      },
+      {
+        "id": "l33",
+        "src": {
+          "b": "b4",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 1
+        },
+        "pts": [
+          [
+            440,
+            60
+          ],
+          [
+            440,
+            110
+          ],
+          [
+            113,
+            110
+          ]
+        ]
+      },
+      {
+        "id": "l34",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b5",
+          "port": 0
+        },
+        "pts": [
+          [
+            80,
+            60
+          ],
+          [
+            80,
+            210
+          ]
+        ]
+      },
+      {
+        "id": "l35",
+        "src": {
+          "b": "b5",
+          "port": 0
+        },
+        "dst": {
+          "b": "b6",
+          "port": 0
+        }
+      },
+      {
+        "id": "l36",
+        "src": {
+          "b": "b6",
+          "port": 0
+        },
+        "dst": {
+          "b": "b7",
+          "port": 0
+        }
+      },
+      {
+        "id": "l37",
+        "src": {
+          "b": "b7",
+          "port": 0
+        },
+        "dst": {
+          "b": "b8",
+          "port": 0
+        }
+      },
+      {
+        "id": "l38",
+        "src": {
+          "b": "b8",
+          "port": 0
+        },
+        "dst": {
+          "b": "b9",
+          "port": 0
+        },
+        "pts": [
+          [
+            470,
+            210
+          ],
+          [
+            470,
+            270
+          ]
+        ]
+      },
+      {
+        "id": "l39",
+        "src": {
+          "b": "b9",
+          "port": 0
+        },
+        "dst": {
+          "b": "b5",
+          "port": 1
+        },
+        "pts": [
+          [
+            113,
+            270
+          ]
+        ]
+      },
+      {
+        "id": "l40",
+        "src": {
+          "b": "b4",
+          "port": 0
+        },
+        "dst": {
+          "b": "b10",
+          "port": 0
+        },
+        "pts": [
+          [
+            440,
+            60
+          ],
+          [
+            440,
+            84
+          ]
+        ]
+      },
+      {
+        "id": "l41",
+        "src": {
+          "b": "b8",
+          "port": 0
+        },
+        "dst": {
+          "b": "b10",
+          "port": 1
+        },
+        "pts": [
+          [
+            470,
+            210
+          ],
+          [
+            470,
+            96
+          ]
+        ]
+      },
+      {
+        "id": "l42",
+        "src": {
+          "b": "b6",
+          "port": 0
+        },
+        "dst": {
+          "b": "b11",
+          "port": 0
+        },
+        "pts": [
+          [
+            260,
+            210
+          ],
+          [
+            260,
+            162
+          ]
+        ]
+      },
+      {
+        "id": "l43",
+        "src": {
+          "b": "b7",
+          "port": 0
+        },
+        "dst": {
+          "b": "b11",
+          "port": 1
+        },
+        "pts": [
+          [
+            340,
+            210
+          ],
+          [
+            340,
+            174
+          ]
+        ]
+      }
+    ],
+    "settings": {
+      "stop": "20",
+      "solver": "ode4",
+      "step": "auto",
+      "ws": "% Plant G(s) = 1/(s+1)^2, the same PI gains in both loops\nKp = 2;     % proportional gain\nKi = 1;     % integral gain (1/s)\nTs = 0.5;   % sample time of the ADC and DAC (s), try 0.1, 0.5, 1, 2 and 3",
+      "name": "continuous_vs_sampled_pi"
+    }
+  }
+}

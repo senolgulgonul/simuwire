@@ -2,6 +2,11 @@
 
 Versions follow MAJOR.MINOR.PATCH: a new feature raises MINOR (1.1 → 1.2), a bug fix raises PATCH (1.1 → 1.1.1).
 
+## v1.6 (2026-10-26)
+
+- The digital vs continuous PI example is replaced by *Continuous vs sampled PI* (Examples → Sampled control), laid out like the usual lecture diagram: a continuous PI between two Zero-Order Holds, one on the measurement (ADC) and one on the controller output (DAC), next to the same PI in a continuous loop.
+- New test: the ZOH + PI + ZOH loop matches the Forward Euler difference equation u[k] = Kp·e[k] + I[k], I[k+1] = I[k] + Ki·Ts·e[k], built from a Unit Delay, to machine precision (52 tests in total).
+
 ## v1.5 (2026-10-26)
 
 - New example: digital vs continuous PI (Examples → Discrete control). The same PI gains run as a continuous controller and as a sampled controller built from a Zero-Order Hold, two Gains and a Unit Delay accumulator. Raising the sample time increases the overshoot, and at Ts = 2 the digital loop becomes unstable.

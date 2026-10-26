@@ -13,15 +13,20 @@ Every model here is also built into the app: click **Examples** in the toolbar a
 | `basics/05_saturation_and_dead_zone.json` | A sine wave passed through Saturation (±1) and Dead Zone (±0.5), plotted together. |
 | `basics/06_sample_and_hold.json` | Sampling a sine with a Zero-Order Hold and delaying it by one sample with a Unit Delay (Ts = 0.5 s). |
 
-## Discrete control
+## Sampled control
 
 | File | What it shows |
 |---|---|
-| `discrete/digital_vs_continuous_pi.json` | The same PI controller (Kp = 2, Ki = 1) on the plant 1/(s+1)², once continuous and once digital with sample time Ts. |
+| `sampled/continuous_vs_sampled_pi.json` | The same PI controller (Kp = 2, Ki = 1) on the plant 1/(s+1)², once continuous and once between an ADC and a DAC, both modelled with Zero-Order Holds of sample time Ts. |
 
-The digital PI is built from basic blocks so the difference equation is visible: the Zero-Order Hold samples the error, e[k] = e(kTs); the accumulator (a Sum with a Unit Delay in its feedback path) computes I[k] = I[k−1] + Ki·Ts·e[k]; and u[k] = Kp·e[k] + I[k]. Because both the sampler and the Unit Delay update only at multiples of Ts, u[k] is held constant between samples, which is the staircase in the Control signal scope.
+The ADC (ZOH in the feedback path) samples the output every Ts; the DAC (ZOH after the controller) holds the controller output until the next sample, which is the staircase in the Control signal scope. Between two samples the PI sees a constant error, so its integral grows by exactly Ki·Ts·e[k] per sample. This makes the loop identical to a digital PI running, every Ts:
 
-What to look for: change Ts in Model variables. The continuous loop overshoots by about 6 %. With the same gains the digital loop overshoots by about 9 % at Ts = 0.1, 22 % at Ts = 0.5, 44 % at Ts = 1 and 74 % at Ts = 1.5, and at Ts = 2 it is unstable. Sampling adds delay to the loop, roughly Ts/2, and gains tuned for the continuous controller lose their margin as Ts grows.
+```
+u[k]   = Kp*e[k] + I[k]
+I[k+1] = I[k] + Ki*Ts*e[k]
+```
+
+What to look for: change Ts in Model variables. The continuous loop overshoots by about 6 %. The sampled loop overshoots by about 9 % at Ts = 0.1, 21 % at Ts = 0.5, 35 % at Ts = 1 and 59 % at Ts = 2, and at Ts = 3 it is unstable. Sampling adds delay to the loop, roughly Ts/2, so gains tuned for the continuous controller lose their margin as Ts grows; with a fast enough sample time the continuous analysis is a good approximation. Try removing one of the two holds as well: with only the DAC the effect looks smaller than it is, and with only the ADC it looks larger.
 
 ## On-off control
 
