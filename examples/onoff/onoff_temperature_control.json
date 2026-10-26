@@ -1,0 +1,267 @@
+{
+  "format": "simuwire",
+  "version": 1,
+  "model": {
+    "blocks": [
+      {
+        "id": "b1",
+        "type": "Constant",
+        "name": "Setpoint",
+        "x": 30.0,
+        "y": 85.0,
+        "w": 50,
+        "h": 30,
+        "p": {
+          "Value": "SP"
+        },
+        "flip": false
+      },
+      {
+        "id": "b2",
+        "type": "Sum",
+        "name": "Error",
+        "x": 130.0,
+        "y": 87.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "b3",
+        "type": "Relay",
+        "name": "Thermostat",
+        "x": 200.0,
+        "y": 80.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "OnSwitchValue": "h/2",
+          "OffSwitchValue": "-h/2",
+          "OnOutputValue": "1",
+          "OffOutputValue": "0"
+        },
+        "flip": false
+      },
+      {
+        "id": "b4",
+        "type": "TransportDelay",
+        "name": "Dead time",
+        "x": 290.0,
+        "y": 80.0,
+        "w": 60,
+        "h": 40,
+        "p": {
+          "DelayTime": "L",
+          "InitialOutput": "0"
+        },
+        "flip": false
+      },
+      {
+        "id": "b5",
+        "type": "TransferFcn",
+        "name": "Oven K/(Ts+1)",
+        "x": 400.0,
+        "y": 80.0,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Numerator": "[K]",
+          "Denominator": "[T 1]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b6",
+        "type": "Sum",
+        "name": "Temperature",
+        "x": 520.0,
+        "y": 87.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|++"
+        },
+        "flip": false
+      },
+      {
+        "id": "b7",
+        "type": "Constant",
+        "name": "Ambient",
+        "x": 440.0,
+        "y": 170.0,
+        "w": 50,
+        "h": 30,
+        "p": {
+          "Value": "Ta"
+        },
+        "flip": false
+      },
+      {
+        "id": "b8",
+        "type": "Scope",
+        "name": "Scope",
+        "x": 630.0,
+        "y": 82.0,
+        "w": 36,
+        "h": 36,
+        "p": {
+          "NumInputPorts": "2"
+        },
+        "flip": false
+      },
+      {
+        "id": "b9",
+        "type": "Scope",
+        "name": "Heater",
+        "x": 300.0,
+        "y": 0.0,
+        "w": 36,
+        "h": 36,
+        "p": {
+          "NumInputPorts": "1"
+        },
+        "flip": false
+      }
+    ],
+    "lines": [
+      {
+        "id": "l20",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 0
+        }
+      },
+      {
+        "id": "l21",
+        "src": {
+          "b": "b2",
+          "port": 0
+        },
+        "dst": {
+          "b": "b3",
+          "port": 0
+        }
+      },
+      {
+        "id": "l22",
+        "src": {
+          "b": "b3",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 0
+        }
+      },
+      {
+        "id": "l23",
+        "src": {
+          "b": "b4",
+          "port": 0
+        },
+        "dst": {
+          "b": "b5",
+          "port": 0
+        }
+      },
+      {
+        "id": "l24",
+        "src": {
+          "b": "b5",
+          "port": 0
+        },
+        "dst": {
+          "b": "b6",
+          "port": 0
+        }
+      },
+      {
+        "id": "l25",
+        "src": {
+          "b": "b7",
+          "port": 0
+        },
+        "dst": {
+          "b": "b6",
+          "port": 1
+        }
+      },
+      {
+        "id": "l26",
+        "src": {
+          "b": "b6",
+          "port": 0
+        },
+        "dst": {
+          "b": "b8",
+          "port": 0
+        }
+      },
+      {
+        "id": "l27",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b8",
+          "port": 1
+        },
+        "pts": [
+          [
+            100,
+            100
+          ],
+          [
+            100,
+            230
+          ],
+          [
+            600,
+            230
+          ],
+          [
+            600,
+            106
+          ]
+        ]
+      },
+      {
+        "id": "l28",
+        "src": {
+          "b": "b6",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 1
+        }
+      },
+      {
+        "id": "l29",
+        "src": {
+          "b": "b3",
+          "port": 0
+        },
+        "dst": {
+          "b": "b9",
+          "port": 0
+        }
+      }
+    ],
+    "settings": {
+      "stop": "200",
+      "solver": "ode4",
+      "step": "auto",
+      "ws": "% Oven: temperature rise K e^(-L s)/(T s + 1) per unit heater power\nK = 60;    % temperature rise at full power (°C)\nT = 30;    % time constant (s)\nL = 2;     % dead time (s)\nTa = 20;   % ambient temperature (°C)\n% Thermostat\nSP = 50;   % setpoint (°C)\nh = 2;     % hysteresis band (°C)",
+      "name": "onoff_temperature_control"
+    }
+  }
+}

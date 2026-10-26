@@ -65,6 +65,22 @@ pid('PID: PID ideal form',{Controller:'PID',Form:'Ideal',P:'2',I:'0.5',D:'0.1',N
 // 14 Discontinuities
 {const m=mk(4);const c=add(m,'Ramp',{slope:'1',start:'0',InitialOutput:'-1'});const g=add(m,'Saturation',{UpperLimit:'1',LowerLimit:'-0.5'});const s=add(m,'Scope');wire(m,c,g);wire(m,g,s);check('Saturation',m,s,[[0,-0.5],[0.25,-0.5],[1.2,0.2],[3,1]]);}
 {const m=mk(4);const c=add(m,'Ramp',{slope:'1',start:'0',InitialOutput:'-2'});const g=add(m,'DeadZone',{LowerValue:'-0.5',UpperValue:'0.5'});const s=add(m,'Scope');wire(m,c,g);wire(m,g,s);check('Dead Zone',m,s,[[0,-1.5],[1.8,0],[2.2,0],[3.5,1]]);}
+// 14b Relay
+// sin(t) with switch-on 0.5 / switch-off −0.5: starts off, on at t = π/6, stays on through the band, off at t = 7π/6, on again at 13π/6
+{const m=mk(8,'','0.001');const c=add(m,'Sine');const r=add(m,'Relay',{OnSwitchValue:'0.5',OffSwitchValue:'-0.5',OnOutputValue:'1',OffOutputValue:'-1'});const s=add(m,'Scope');wire(m,c,r);wire(m,r,s);
+ check('Relay (hysteresis)',m,s,[[0,-1],[0.3,-1],[0.6,1],[1.5,1],[3.4,1],[3.75,-1],[5,-1],[6.5,-1],[6.9,1]]);}
+{const m=mk(2);const c=add(m,'Constant',{Value:'2'});const r=add(m,'Relay',{OnSwitchValue:'1',OffSwitchValue:'0',OnOutputValue:'5',OffOutputValue:'0'});const s=add(m,'Scope');wire(m,c,r);wire(m,r,s);check('Relay (starts on)',m,s,[[0,5],[1,5]]);}
+{const m=mk(2);const c=add(m,'Constant',{Value:'0.5'});const r=add(m,'Relay',{OnSwitchValue:'1',OffSwitchValue:'0'});const s=add(m,'Scope');wire(m,c,r);wire(m,r,s);check('Relay (inside band, starts off)',m,s,[[0,0],[1,0]]);}
+// On-off loop: the relay drives 1/s from the error, band ±0.1 around 1. The output rises at slope 1 to 1.1, then
+// falls at slope −1 to 0.9, and so on: a triangle wave between 0.9 and 1.1. With a fixed step the relay switches at
+// the first step past each switching point, so the phase drifts slightly; the test checks the first peak and the band.
+{const m=mk(3,'','0.001');const sp=add(m,'Constant',{Value:'1'});const su=add(m,'Sum',{Inputs:'|+-'});const r=add(m,'Relay',{OnSwitchValue:'0.1',OffSwitchValue:'-0.1',OnOutputValue:'1',OffOutputValue:'-1'});const i=add(m,'Integrator');const s=add(m,'Scope');
+ wire(m,sp,su,0);wire(m,su,r);wire(m,r,i);wire(m,i,su,1);wire(m,i,s);
+ try{const res=simulate(m).scopes[s.id];let hi=-Infinity,lo=Infinity;res.t.forEach((t,k)=>{if(t>1.2){hi=Math.max(hi,res.ys[0][k]);lo=Math.min(lo,res.ys[0][k]);}});
+  const v05=sample({scopes:{[s.id]:res}},s,0,0.5),err=Math.max(Math.abs(hi-1.1),Math.abs(lo-0.9),Math.abs(v05-0.5));
+  out.push(['Relay on-off loop (limit cycle)',err<=3e-3?'PASS':'FAIL',`band ${lo.toFixed(4)}…${hi.toFixed(4)}, max error ${err.toExponential(2)}`]);}
+ catch(e){out.push(['Relay on-off loop (limit cycle)','FAIL','error: '+e.message]);}}
+{const m=mk(2);const c=add(m,'Constant');const r=add(m,'Relay',{OnSwitchValue:'-1',OffSwitchValue:'1'});const s=add(m,'Scope');wire(m,c,r);wire(m,r,s);try{simulate(m);out.push(['Relay bad switch points rejected','FAIL','no error']);}catch(e){out.push(['Relay bad switch points rejected',/switch-off point/.test(e.message)?'PASS':'FAIL',e.message]);}}
 // 15 Switch
 for(const [cr,lab,f] of [['u2 >= Threshold','u2 ≥ threshold',t=>t>=2?1:-1],['u2 > Threshold','u2 > threshold',t=>t>2?1:-1],['u2 ~= 0','u2 ≠ 0',t=>t!==0?1:-1]]){
  const m=mk(4,'','0.5');const a=add(m,'Constant',{Value:'1'}),c=add(m,'Clock'),b=add(m,'Constant',{Value:'-1'});const sw=add(m,'Switch',{Criteria:cr,Threshold:'2'});const s=add(m,'Scope');

@@ -11,7 +11,7 @@ It can also open Simulink `.slx` and `.mdl` files directly, so models you built 
 - **Online:** [senolgulgonul.github.io/simuwire](https://senolgulgonul.github.io/simuwire/)
 - **Offline:** download `index.html` and open it in any modern browser (Chrome, Edge, Firefox, Safari).
 
-Click **Examples** to load one of the built-in models. The same models are also in [`examples/`](examples/): basic system responses, a mass-spring-damper, the Van der Pol oscillator, sampling, and PID control of a first-order-plus-dead-time (FOPDT) process with Ziegler–Nichols and SIMC tuning. Press **Run**.
+Click **Examples** to load one of the built-in models. The same models are also in [`examples/`](examples/): basic system responses, a mass-spring-damper, the Van der Pol oscillator, sampling, on-off temperature control with a Relay, and PID control of a first-order-plus-dead-time (FOPDT) process with Ziegler–Nichols and SIMC tuning. Press **Run**.
 
 ## Features
 
@@ -29,7 +29,7 @@ Click **Examples** to load one of the built-in models. The same models are also 
 | Category | Blocks |
 |---|---|
 | Continuous | Integrator, Derivative, Transfer Fcn, Transport Delay, PID Controller |
-| Discontinuities | Saturation, Dead Zone |
+| Discontinuities | Saturation, Dead Zone, Relay |
 | Discrete | Unit Delay, Zero-Order Hold |
 | Math Operations | Sum, Gain, Product, Abs |
 | Signal Routing | Switch |
@@ -39,13 +39,15 @@ Click **Examples** to load one of the built-in models. The same models are also 
 
 The PID Controller supports P, PI, PD, PID and I types, parallel and ideal forms, and a first-order derivative filter (coefficient N).
 
+The Relay block is an on-off switch with hysteresis for thermostat-style control. Set the switch-on and switch-off points apart to get a hysteresis band; with the defaults (both `eps`) it switches at zero.
+
 ## Validation
 
 A PI controller (Kp = 1, Ki = 1) on the plant 1/(s+1) with a 1 s transport delay was simulated in both Simulink and Simuwire. The responses match: a 1.5 peak at t ≈ 3 s, a dip to about 0.76 at t ≈ 5.3 s, and a value of 0.947 at t = 10 s. The `.slx` version of `examples/pid/pi_fopdt_with_and_without_dead_time.json` was also imported and checked against an independent Python simulation of the same loop.
 
 ## Tests
 
-`tests/block_tests.js` checks every block against an analytic answer: 45 tests covering all 23 blocks, all PID variants, both solvers and the error checks (algebraic loops, undefined variables, improper transfer functions). To run it, open Simuwire, open the browser console (F12), paste the file and press Enter.
+`tests/block_tests.js` checks every block against an analytic answer: 50 tests covering all 24 blocks, all PID variants, both solvers and the error checks (algebraic loops, undefined variables, improper transfer functions). To run it, open Simuwire, open the browser console (F12), paste the file and press Enter.
 
 ## Importing Simulink models
 
@@ -93,14 +95,14 @@ Everything runs in the browser. The `.slx` reader unzips the file and parses its
 
 Simuwire is free to use under the MIT License. If you use it in a course, a thesis or a paper, a citation is appreciated:
 
-> Gülgönül, Ş. (2026). *Simuwire: a browser-based block diagram simulator* (Version 1.2) [Computer software]. https://github.com/senolgulgonul/simuwire
+> Gülgönül, Ş. (2026). *Simuwire: a browser-based block diagram simulator* (Version 1.3) [Computer software]. https://github.com/senolgulgonul/simuwire
 
 ```bibtex
 @software{gulgonul_simuwire_2026,
   author  = {G{\"u}lg{\"o}n{\"u}l, {\c{S}}enol},
   title   = {Simuwire: a browser-based block diagram simulator},
   year    = {2026},
-  version = {1.2},
+  version = {1.3},
   url     = {https://github.com/senolgulgonul/simuwire}
 }
 ```

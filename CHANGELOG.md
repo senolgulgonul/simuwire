@@ -2,6 +2,13 @@
 
 Versions follow MAJOR.MINOR.PATCH: a new feature raises MINOR (1.1 → 1.2), a bug fix raises PATCH (1.1 → 1.1.1).
 
+## v1.3 (2026-10-26)
+
+- New **Relay** block (Discontinuities) for on-off control: switch-on and switch-off points with hysteresis, and adjustable on and off output values. It is also read from Simulink `.slx` and `.mdl` files.
+- New example: on-off temperature control of an oven with dead time (Examples → On-off control).
+- Fixed: two error messages (negative transport delay, invalid Fcn expression) were shown in Turkish; they are now in English.
+- Five new Relay tests (50 tests in total).
+
 ## v1.2 (2026-10-25)
 
 - Opens `.slx` files saved by older Simulink releases (diagram stored in a single `blockdiagram.xml`, lines connected by block name).

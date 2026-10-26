@@ -13,6 +13,14 @@ Every model here is also built into the app: click **Examples** in the toolbar a
 | `basics/05_saturation_and_dead_zone.json` | A sine wave passed through Saturation (±1) and Dead Zone (±0.5), plotted together. |
 | `basics/06_sample_and_hold.json` | Sampling a sine with a Zero-Order Hold and delaying it by one sample with a Unit Delay (Ts = 0.5 s). |
 
+## On-off control
+
+| File | What it shows |
+|---|---|
+| `onoff/onoff_temperature_control.json` | A thermostat (Relay) heats an oven K·e^(−Ls)/(Ts+1) from 20 °C to a 50 °C setpoint with a ±1 °C hysteresis band. |
+
+What to look for: the heater only switches on and off, so the temperature never settles; it cycles around the setpoint. The relay switches at 49 °C and 51 °C, but because of the 2 s dead time the temperature keeps moving after each switch and actually swings between about 47.3 °C and 52.7 °C. Set `L = 0` in Model variables and the swing shrinks to about the ±1 °C band; make `h` smaller and the heater switches more often.
+
 ## PID control of a FOPDT process
 
 A first-order-plus-dead-time process, G(s) = K·e^(−Ls)/(Ts + 1), is the standard model for many industrial loops (temperature, level, flow).
