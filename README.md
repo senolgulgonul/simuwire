@@ -95,14 +95,14 @@ Everything runs in the browser. The `.slx` reader unzips the file and parses its
 
 Simuwire is free to use under the MIT License. If you use it in a course, a thesis or a paper, a citation is appreciated:
 
-> Gülgönül, Ş. (2026). *Simuwire: a browser-based block diagram simulator* (Version 1.3) [Computer software]. https://github.com/senolgulgonul/simuwire
+> Gülgönül, Ş. (2026). *Simuwire: a browser-based block diagram simulator* (Version 1.3.1) [Computer software]. https://github.com/senolgulgonul/simuwire
 
 ```bibtex
 @software{gulgonul_simuwire_2026,
   author  = {G{\"u}lg{\"o}n{\"u}l, {\c{S}}enol},
   title   = {Simuwire: a browser-based block diagram simulator},
   year    = {2026},
-  version = {1.3},
+  version = {1.3.1},
   url     = {https://github.com/senolgulgonul/simuwire}
 }
 ```

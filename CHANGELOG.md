@@ -2,6 +2,10 @@
 
 Versions follow MAJOR.MINOR.PATCH: a new feature raises MINOR (1.1 → 1.2), a bug fix raises PATCH (1.1 → 1.1.1).
 
+## v1.3.1 (2026-10-26)
+
+- Blocks are drawn without a drop shadow, for a plainer look that also prints more cleanly.
+
 ## v1.3 (2026-10-26)
 
 - New **Relay** block (Discontinuities) for on-off control: switch-on and switch-off points with hysteresis, and adjustable on and off output values. It is also read from Simulink `.slx` and `.mdl` files.
