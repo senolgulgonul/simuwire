@@ -19,7 +19,7 @@ Every model here is also built into the app: click **Examples** in the toolbar a
 |---|---|
 | `sampled/continuous_vs_sampled_pi.json` | The same PI controller (Kp = 2, Ki = 1) on the plant 1/(s+1)², once continuous and once between an ADC and a DAC, both modelled with Zero-Order Holds of sample time Ts. |
 
-The ADC (ZOH in the feedback path) samples the output every Ts; the DAC (ZOH after the controller) holds the controller output until the next sample, which is the staircase in the Control signal scope. Between two samples the PI sees a constant error, so its integral grows by exactly Ki·Ts·e[k] per sample. This makes the loop identical to a digital PI running, every Ts:
+The ADC (ZOH in the feedback path) samples the output every Ts; the DAC (ZOH after the controller) holds the controller output until the next sample. The Control signal scope compares the continuous PI output with the DAC output, the staircase. Between two samples the PI sees a constant error, so its integral grows by exactly Ki·Ts·e[k] per sample. This makes the loop identical to a digital PI running, every Ts:
 
 ```
 u[k]   = Kp*e[k] + I[k]

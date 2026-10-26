@@ -2,6 +2,10 @@
 
 Versions follow MAJOR.MINOR.PATCH: a new feature raises MINOR (1.1 → 1.2), a bug fix raises PATCH (1.1 → 1.1.1).
 
+## v1.6.1 (2026-10-26)
+
+- Fixed the Continuous vs sampled PI example: the Control signal scope now compares the continuous PI output (input 1) with the DAC output of the sampled loop (input 2).
+
 ## v1.6 (2026-10-26)
 
 - The digital vs continuous PI example is replaced by *Continuous vs sampled PI* (Examples → Sampled control), laid out like the usual lecture diagram: a continuous PI between two Zero-Order Holds, one on the measurement (ADC) and one on the controller output (DAC), next to the same PI in a continuous loop.
