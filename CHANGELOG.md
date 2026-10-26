@@ -2,6 +2,10 @@
 
 Versions follow MAJOR.MINOR.PATCH: a new feature raises MINOR (1.1 → 1.2), a bug fix raises PATCH (1.1 → 1.1.1).
 
+## v1.4.1 (2026-10-26)
+
+- The Scope window no longer has a Fit button: double-click the plot to see the whole signal. The Fit button in the main toolbar stays.
+
 ## v1.4 (2026-10-26)
 
 - Scope windows can be zoomed and panned: scroll to zoom around the pointer (over the time or value axis, only that axis zooms), drag with the left button to pan, and press **Fit** or double-click the plot to see the whole signal again. The zoom is kept when you run the simulation again, so you can compare runs at the same spot.
