@@ -37,7 +37,7 @@ Click **Examples** to load one of the built-in models. The same models are also 
 | Sources | Constant, Step, Sine Wave, Ramp, Pulse Generator, Clock |
 | User-Defined Functions | Fcn (e.g. `2*u^2 + sin(t)`) |
 
-The PID Controller supports P, PI, PD, PID and I types, parallel and ideal forms, and a first-order derivative filter (coefficient N). To model a digital controller, put a Zero-Order Hold on the measurement (ADC) and one on the controller output (DAC); see the sampled PI example.
+The PID Controller supports P, PI, PD, PID and I types, parallel and ideal forms, and a first-order derivative filter (coefficient N). With Limit output, the output is kept between an upper and a lower limit, and clamping anti-windup stops the integrator while the output is at a limit. To model a digital controller, put a Zero-Order Hold on the measurement (ADC) and one on the controller output (DAC); see the sampled PI example.
 
 The Relay block is an on-off switch with hysteresis for thermostat-style control. Set the switch-on and switch-off points apart to get a hysteresis band; with the defaults (both `eps`) it switches at zero.
 
@@ -47,7 +47,7 @@ A PI controller (Kp = 1, Ki = 1) on the plant 1/(s+1) with a 1 s transport delay
 
 ## Tests
 
-`tests/block_tests.js` checks every block against an analytic answer: 52 tests covering all 24 blocks, all PID variants, both solvers and the error checks (algebraic loops, undefined variables, improper transfer functions). To run it, open Simuwire, open the browser console (F12), paste the file and press Enter.
+`tests/block_tests.js` checks every block against an analytic answer: 56 tests covering all 24 blocks, all PID variants including output limits and anti-windup, both solvers and the error checks (algebraic loops, undefined variables, improper transfer functions). To run it, open Simuwire, open the browser console (F12), paste the file and press Enter.
 
 ## Importing Simulink models
 
@@ -88,6 +88,7 @@ See [CHANGELOG.md](CHANGELOG.md).
 - Scope export to PNG and CSV
 - Derivative on measurement (setpoint weighting) for the PID block
 - Variable-step solver
+- Arduino I/O blocks and code generation, and a Code block for writing controllers as C-like code
 
 ## How it works
 
@@ -97,14 +98,14 @@ Everything runs in the browser. The `.slx` reader unzips the file and parses its
 
 Simuwire is free to use under the MIT License. If you use it in a course, a thesis or a paper, a citation is appreciated:
 
-> Gülgönül, Ş. (2026). *Simuwire: a browser-based block diagram simulator* (Version 1.6.1) [Computer software]. https://github.com/senolgulgonul/simuwire
+> Gülgönül, Ş. (2026). *Simuwire: a browser-based block diagram simulator* (Version 1.7) [Computer software]. https://github.com/senolgulgonul/simuwire
 
 ```bibtex
 @software{gulgonul_simuwire_2026,
   author  = {G{\"u}lg{\"o}n{\"u}l, {\c{S}}enol},
   title   = {Simuwire: a browser-based block diagram simulator},
   year    = {2026},
-  version = {1.6.1},
+  version = {1.7},
   url     = {https://github.com/senolgulgonul/simuwire}
 }
 ```

@@ -2,6 +2,14 @@
 
 Versions follow MAJOR.MINOR.PATCH: a new feature raises MINOR (1.1 → 1.2), a bug fix raises PATCH (1.1 → 1.1.1).
 
+## v1.7 (2026-10-26)
+
+- PID Controller: new **Limit output** option with upper and lower limits, and **clamping anti-windup**, which stops the integrator while the output is at a limit and integrating would push it further. The limit fields appear in the dialog only when Limit output is on. Limits and the anti-windup mode are read from Simulink files; back-calculation, which Simuwire does not have, is read as no anti-windup.
+- Saturation and the PID limits accept `inf` and `-inf`.
+- New example: PI anti-windup (Examples → PID control), a PI with a limited output with and without clamping.
+- Four new tests (56 in total): output limit, windup without anti-windup, clamping, and invalid limits.
+- Roadmap: Arduino I/O blocks and code generation, and a Code block for writing controllers as C-like code.
+
 ## v1.6.1 (2026-10-26)
 
 - Fixed the Continuous vs sampled PI example: the Control signal scope now compares the continuous PI output (input 1) with the DAC output of the sampled loop (input 2).

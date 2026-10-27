@@ -1,0 +1,366 @@
+{
+  "format": "simuwire",
+  "version": 1,
+  "model": {
+    "blocks": [
+      {
+        "id": "b1",
+        "type": "Step",
+        "name": "Setpoint",
+        "x": 20.0,
+        "y": 40.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "Time": "0",
+          "Before": "0",
+          "After": "1"
+        },
+        "flip": false
+      },
+      {
+        "id": "b2",
+        "type": "Sum",
+        "name": "Sum",
+        "x": 100.0,
+        "y": 47.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "b3",
+        "type": "PID",
+        "name": "No anti-windup",
+        "x": 170.0,
+        "y": 40.0,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Controller": "PI",
+          "Form": "Parallel",
+          "P": "Kp",
+          "I": "Ki",
+          "D": "0",
+          "N": "100",
+          "LimitOutput": "on",
+          "UpperSaturationLimit": "umax",
+          "LowerSaturationLimit": "umin",
+          "AntiWindupMode": "none"
+        },
+        "flip": false
+      },
+      {
+        "id": "b4",
+        "type": "TransferFcn",
+        "name": "Plant",
+        "x": 330.0,
+        "y": 40.0,
+        "w": 80,
+        "h": 40,
+        "p": {
+          "Numerator": "[1]",
+          "Denominator": "[T 1]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b5",
+        "type": "Sum",
+        "name": "Sum1",
+        "x": 100.0,
+        "y": 197.0,
+        "w": 26,
+        "h": 26,
+        "p": {
+          "Inputs": "|+-"
+        },
+        "flip": false
+      },
+      {
+        "id": "b6",
+        "type": "PID",
+        "name": "Clamping",
+        "x": 170.0,
+        "y": 190.0,
+        "w": 70,
+        "h": 40,
+        "p": {
+          "Controller": "PI",
+          "Form": "Parallel",
+          "P": "Kp",
+          "I": "Ki",
+          "D": "0",
+          "N": "100",
+          "LimitOutput": "on",
+          "UpperSaturationLimit": "umax",
+          "LowerSaturationLimit": "umin",
+          "AntiWindupMode": "clamping"
+        },
+        "flip": false
+      },
+      {
+        "id": "b7",
+        "type": "TransferFcn",
+        "name": "Plant (clamping)",
+        "x": 330.0,
+        "y": 190.0,
+        "w": 80,
+        "h": 40,
+        "p": {
+          "Numerator": "[1]",
+          "Denominator": "[T 1]"
+        },
+        "flip": false
+      },
+      {
+        "id": "b8",
+        "type": "Scope",
+        "name": "Output",
+        "x": 540.0,
+        "y": 72.0,
+        "w": 36,
+        "h": 36,
+        "p": {
+          "NumInputPorts": "2"
+        },
+        "flip": false
+      },
+      {
+        "id": "b9",
+        "type": "Scope",
+        "name": "Control signal",
+        "x": 540.0,
+        "y": 150.0,
+        "w": 36,
+        "h": 36,
+        "p": {
+          "NumInputPorts": "2"
+        },
+        "flip": false
+      }
+    ],
+    "lines": [
+      {
+        "id": "l30",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 0
+        }
+      },
+      {
+        "id": "l31",
+        "src": {
+          "b": "b2",
+          "port": 0
+        },
+        "dst": {
+          "b": "b3",
+          "port": 0
+        }
+      },
+      {
+        "id": "l32",
+        "src": {
+          "b": "b3",
+          "port": 0
+        },
+        "dst": {
+          "b": "b4",
+          "port": 0
+        }
+      },
+      {
+        "id": "l33",
+        "src": {
+          "b": "b4",
+          "port": 0
+        },
+        "dst": {
+          "b": "b2",
+          "port": 1
+        },
+        "pts": [
+          [
+            440,
+            60
+          ],
+          [
+            440,
+            110
+          ],
+          [
+            113,
+            110
+          ]
+        ]
+      },
+      {
+        "id": "l34",
+        "src": {
+          "b": "b1",
+          "port": 0
+        },
+        "dst": {
+          "b": "b5",
+          "port": 0
+        },
+        "pts": [
+          [
+            80,
+            60
+          ],
+          [
+            80,
+            210
+          ]
+        ]
+      },
+      {
+        "id": "l35",
+        "src": {
+          "b": "b5",
+          "port": 0
+        },
+        "dst": {
+          "b": "b6",
+          "port": 0
+        }
+      },
+      {
+        "id": "l36",
+        "src": {
+          "b": "b6",
+          "port": 0
+        },
+        "dst": {
+          "b": "b7",
+          "port": 0
+        }
+      },
+      {
+        "id": "l37",
+        "src": {
+          "b": "b7",
+          "port": 0
+        },
+        "dst": {
+          "b": "b5",
+          "port": 1
+        },
+        "pts": [
+          [
+            460,
+            210
+          ],
+          [
+            460,
+            260
+          ],
+          [
+            113,
+            260
+          ]
+        ]
+      },
+      {
+        "id": "l38",
+        "src": {
+          "b": "b4",
+          "port": 0
+        },
+        "dst": {
+          "b": "b8",
+          "port": 0
+        },
+        "pts": [
+          [
+            440,
+            60
+          ],
+          [
+            440,
+            84
+          ]
+        ]
+      },
+      {
+        "id": "l39",
+        "src": {
+          "b": "b7",
+          "port": 0
+        },
+        "dst": {
+          "b": "b8",
+          "port": 1
+        },
+        "pts": [
+          [
+            460,
+            210
+          ],
+          [
+            460,
+            96
+          ]
+        ]
+      },
+      {
+        "id": "l40",
+        "src": {
+          "b": "b3",
+          "port": 0
+        },
+        "dst": {
+          "b": "b9",
+          "port": 0
+        },
+        "pts": [
+          [
+            270,
+            60
+          ],
+          [
+            270,
+            162
+          ]
+        ]
+      },
+      {
+        "id": "l41",
+        "src": {
+          "b": "b6",
+          "port": 0
+        },
+        "dst": {
+          "b": "b9",
+          "port": 1
+        },
+        "pts": [
+          [
+            290,
+            210
+          ],
+          [
+            290,
+            174
+          ]
+        ]
+      }
+    ],
+    "settings": {
+      "stop": "60",
+      "solver": "ode4",
+      "step": "auto",
+      "ws": "% Plant G(s) = 1/(T s + 1)\nT = 10;      % time constant (s)\n% PI controller, the same gains in both loops\nKp = 5;      % proportional gain\nKi = 1;      % integral gain (1/s)\n% Actuator range, e.g. heater power from 0 to 1.5\numax = 1.5;  % upper limit, try 1.2, or 10 for no saturation\numin = 0;    % lower limit",
+      "name": "pi_anti_windup"
+    }
+  }
+}

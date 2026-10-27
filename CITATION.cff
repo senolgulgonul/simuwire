@@ -6,7 +6,7 @@ authors:
   - family-names: "Gülgönül"
     given-names: "Şenol"
     orcid: "https://orcid.org/0000-0001-5346-4448"
-version: "1.6.1"
+version: "1.7"
 date-released: "2026-10-26"
 license: MIT
 repository-code: "https://github.com/senolgulgonul/simuwire"

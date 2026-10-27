@@ -96,6 +96,18 @@ pid('PID: PID ideal form',{Controller:'PID',Form:'Ideal',P:'2',I:'0.5',D:'0.1',N
  try{const r=simulate(m).scopes[sc.id];let err=0;for(let i=0;i<r.t.length;i++)err=Math.max(err,Math.abs(r.ys[0][i]-r.ys[1][i]));
   out.push(['ZOH + PI + ZOH = difference equation',err<=1e-6?'PASS':'FAIL',`max difference ${err.toExponential(2)}`]);}
  catch(e){out.push(['ZOH + PI + ZOH = difference equation','FAIL','error: '+e.message]);}}
+// 14d PID output limits and anti-windup. Error +1 until t = 3, then −1; I controller, I = 1, upper limit 1.
+//  none:             z = t keeps growing to 3 while u is stuck at 1, so u stays at 1 until z falls below 1 at t = 5
+//  clamping:         z stops at 1 at t = 1, so u leaves the limit as soon as the error turns: u = 1 − (t − 3)
+{const aw=(mode)=>{const m=mk(6,'','0.001');const c=add(m,'Step',{Time:'3',Before:'1',After:'-1'});
+   const g=add(m,'PID',{Controller:'I',I:'1',LimitOutput:'on',UpperSaturationLimit:'1',LowerSaturationLimit:'-inf',AntiWindupMode:mode});const s=add(m,'Scope');wire(m,c,g);wire(m,g,s);return[m,s];};
+ {const[m,s]=aw('none');check('PID limit, no anti-windup',m,s,[[0.5,0.5],[2,1],[4,1],[4.9,1],[5.5,0.5],[6,0]],2e-3);}
+ {const[m,s]=aw('clamping');check('PID anti-windup, clamping',m,s,[[0.5,0.5],[2,1],[3.5,0.5],[4,0],[5,-1]],2e-3);}
+}
+// Limits on a P controller: v = 10·e is cut to the limits
+{const m=mk(1);const c=add(m,'Constant',{Value:'1'});const g=add(m,'PID',{Controller:'P',P:'10',LimitOutput:'on',UpperSaturationLimit:'2',LowerSaturationLimit:'-2'});const s=add(m,'Scope');wire(m,c,g);wire(m,g,s);check('PID output limit',m,s,[[0,2],[1,2]]);}
+{const m=mk(1);const c=add(m,'Constant');const g=add(m,'PID',{LimitOutput:'on',UpperSaturationLimit:'-1',LowerSaturationLimit:'1'});const s=add(m,'Scope');wire(m,c,g);wire(m,g,s);
+ try{simulate(m);out.push(['PID bad limits rejected','FAIL','no error']);}catch(e){out.push(['PID bad limits rejected',/lower limit/.test(e.message)?'PASS':'FAIL',e.message]);}}
 // 15 Switch
 for(const [cr,lab,f] of [['u2 >= Threshold','u2 ≥ threshold',t=>t>=2?1:-1],['u2 > Threshold','u2 > threshold',t=>t>2?1:-1],['u2 ~= 0','u2 ≠ 0',t=>t!==0?1:-1]]){
  const m=mk(4,'','0.5');const a=add(m,'Constant',{Value:'1'}),c=add(m,'Clock'),b=add(m,'Constant',{Value:'-1'});const sw=add(m,'Switch',{Criteria:cr,Threshold:'2'});const s=add(m,'Scope');

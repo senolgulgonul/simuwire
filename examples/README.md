@@ -13,6 +13,24 @@ Every model here is also built into the app: click **Examples** in the toolbar a
 | `basics/05_saturation_and_dead_zone.json` | A sine wave passed through Saturation (±1) and Dead Zone (±0.5), plotted together. |
 | `basics/06_sample_and_hold.json` | Sampling a sine with a Zero-Order Hold and delaying it by one sample with a Unit Delay (Ts = 0.5 s). |
 
+## PI anti-windup
+
+| File | What it shows |
+|---|---|
+| `pid/pi_anti_windup.json` | A PI controller (Kp = 5, Ki = 1) on the plant 1/(10s+1) with its output limited to 0…1.5, once without anti-windup and once with clamping. |
+
+At the step the PI asks for more than the actuator can give, so its output sits at the upper limit. Without anti-windup the integrator keeps integrating the error during that time and winds up: the output stays at the limit for about 20 s, the plant overshoots by about 30 % and settles only after about 33 s. With clamping the integrator stops while the output is at the limit, so the controller leaves the limit as soon as the plant approaches the setpoint: no overshoot, settled after about 15 s.
+
+In code, the simplest form of clamping is one condition around the integrator update (the block is slightly smarter: while limited it still integrates if that would bring the output back inside the limits):
+
+```
+u = Kp*e + I;
+if (u > umax) u = umax; else if (u < umin) u = umin;
+else I = I + Ki*Ts*e;        // integrate only while the output is not limited
+```
+
+What to look for: compare the two curves in the Control signal scope. Then try `umax = 1.2` (stronger saturation, much worse windup) and `umax = 10` (no saturation, the two loops give the same response).
+
 ## Sampled control
 
 | File | What it shows |
