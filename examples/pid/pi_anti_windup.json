@@ -34,7 +34,7 @@
       {
         "id": "b3",
         "type": "PID",
-        "name": "No anti-windup",
+        "name": "PI",
         "x": 170.0,
         "y": 40.0,
         "w": 70,
@@ -46,18 +46,31 @@
           "I": "Ki",
           "D": "0",
           "N": "100",
-          "LimitOutput": "on",
-          "UpperSaturationLimit": "umax",
-          "LowerSaturationLimit": "umin",
-          "AntiWindupMode": "none"
+          "LimitIntegrator": "off",
+          "IntegratorUpperLimit": "inf",
+          "IntegratorLowerLimit": "-inf"
         },
         "flip": false
       },
       {
         "id": "b4",
+        "type": "Saturation",
+        "name": "Actuator",
+        "x": 280.0,
+        "y": 40.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "UpperLimit": "umax",
+          "LowerLimit": "umin"
+        },
+        "flip": false
+      },
+      {
+        "id": "b5",
         "type": "TransferFcn",
         "name": "Plant",
-        "x": 330.0,
+        "x": 360.0,
         "y": 40.0,
         "w": 80,
         "h": 40,
@@ -68,7 +81,7 @@
         "flip": false
       },
       {
-        "id": "b5",
+        "id": "b6",
         "type": "Sum",
         "name": "Sum1",
         "x": 100.0,
@@ -81,9 +94,9 @@
         "flip": false
       },
       {
-        "id": "b6",
+        "id": "b7",
         "type": "PID",
-        "name": "Clamping",
+        "name": "PI (clamping)",
         "x": 170.0,
         "y": 190.0,
         "w": 70,
@@ -95,18 +108,31 @@
           "I": "Ki",
           "D": "0",
           "N": "100",
-          "LimitOutput": "on",
-          "UpperSaturationLimit": "umax",
-          "LowerSaturationLimit": "umin",
-          "AntiWindupMode": "clamping"
+          "LimitIntegrator": "on",
+          "IntegratorUpperLimit": "imax",
+          "IntegratorLowerLimit": "imin"
         },
         "flip": false
       },
       {
-        "id": "b7",
+        "id": "b8",
+        "type": "Saturation",
+        "name": "Actuator (clamping)",
+        "x": 280.0,
+        "y": 190.0,
+        "w": 40,
+        "h": 40,
+        "p": {
+          "UpperLimit": "umax",
+          "LowerLimit": "umin"
+        },
+        "flip": false
+      },
+      {
+        "id": "b9",
         "type": "TransferFcn",
         "name": "Plant (clamping)",
-        "x": 330.0,
+        "x": 360.0,
         "y": 190.0,
         "w": 80,
         "h": 40,
@@ -117,10 +143,10 @@
         "flip": false
       },
       {
-        "id": "b8",
+        "id": "b10",
         "type": "Scope",
         "name": "Output",
-        "x": 540.0,
+        "x": 580.0,
         "y": 72.0,
         "w": 36,
         "h": 36,
@@ -130,10 +156,10 @@
         "flip": false
       },
       {
-        "id": "b9",
+        "id": "b11",
         "type": "Scope",
         "name": "Control signal",
-        "x": 540.0,
+        "x": 580.0,
         "y": 150.0,
         "w": 36,
         "h": 36,
@@ -184,16 +210,27 @@
           "port": 0
         },
         "dst": {
+          "b": "b5",
+          "port": 0
+        }
+      },
+      {
+        "id": "l34",
+        "src": {
+          "b": "b5",
+          "port": 0
+        },
+        "dst": {
           "b": "b2",
           "port": 1
         },
         "pts": [
           [
-            440,
+            470,
             60
           ],
           [
-            440,
+            470,
             110
           ],
           [
@@ -203,13 +240,13 @@
         ]
       },
       {
-        "id": "l34",
+        "id": "l35",
         "src": {
           "b": "b1",
           "port": 0
         },
         "dst": {
-          "b": "b5",
+          "b": "b6",
           "port": 0
         },
         "pts": [
@@ -222,17 +259,6 @@
             210
           ]
         ]
-      },
-      {
-        "id": "l35",
-        "src": {
-          "b": "b5",
-          "port": 0
-        },
-        "dst": {
-          "b": "b6",
-          "port": 0
-        }
       },
       {
         "id": "l36",
@@ -252,16 +278,38 @@
           "port": 0
         },
         "dst": {
-          "b": "b5",
+          "b": "b8",
+          "port": 0
+        }
+      },
+      {
+        "id": "l38",
+        "src": {
+          "b": "b8",
+          "port": 0
+        },
+        "dst": {
+          "b": "b9",
+          "port": 0
+        }
+      },
+      {
+        "id": "l39",
+        "src": {
+          "b": "b9",
+          "port": 0
+        },
+        "dst": {
+          "b": "b6",
           "port": 1
         },
         "pts": [
           [
-            460,
+            490,
             210
           ],
           [
-            460,
+            490,
             260
           ],
           [
@@ -271,85 +319,85 @@
         ]
       },
       {
-        "id": "l38",
-        "src": {
-          "b": "b4",
-          "port": 0
-        },
-        "dst": {
-          "b": "b8",
-          "port": 0
-        },
-        "pts": [
-          [
-            440,
-            60
-          ],
-          [
-            440,
-            84
-          ]
-        ]
-      },
-      {
-        "id": "l39",
-        "src": {
-          "b": "b7",
-          "port": 0
-        },
-        "dst": {
-          "b": "b8",
-          "port": 1
-        },
-        "pts": [
-          [
-            460,
-            210
-          ],
-          [
-            460,
-            96
-          ]
-        ]
-      },
-      {
         "id": "l40",
         "src": {
-          "b": "b3",
+          "b": "b5",
           "port": 0
         },
         "dst": {
-          "b": "b9",
+          "b": "b10",
           "port": 0
         },
         "pts": [
           [
-            270,
+            470,
             60
           ],
           [
-            270,
-            162
+            470,
+            84
           ]
         ]
       },
       {
         "id": "l41",
         "src": {
-          "b": "b6",
+          "b": "b9",
           "port": 0
         },
         "dst": {
-          "b": "b9",
+          "b": "b10",
           "port": 1
         },
         "pts": [
           [
-            290,
+            490,
             210
           ],
           [
-            290,
+            490,
+            96
+          ]
+        ]
+      },
+      {
+        "id": "l42",
+        "src": {
+          "b": "b4",
+          "port": 0
+        },
+        "dst": {
+          "b": "b11",
+          "port": 0
+        },
+        "pts": [
+          [
+            335,
+            60
+          ],
+          [
+            335,
+            162
+          ]
+        ]
+      },
+      {
+        "id": "l43",
+        "src": {
+          "b": "b8",
+          "port": 0
+        },
+        "dst": {
+          "b": "b11",
+          "port": 1
+        },
+        "pts": [
+          [
+            345,
+            210
+          ],
+          [
+            345,
             174
           ]
         ]
@@ -359,7 +407,7 @@
       "stop": "60",
       "solver": "ode4",
       "step": "auto",
-      "ws": "% Plant G(s) = 1/(T s + 1)\nT = 10;      % time constant (s)\n% PI controller, the same gains in both loops\nKp = 5;      % proportional gain\nKi = 1;      % integral gain (1/s)\n% Actuator range, e.g. heater power from 0 to 1.5\numax = 1.5;  % upper limit, try 1.2, or 10 for no saturation\numin = 0;    % lower limit",
+      "ws": "% Plant G(s) = 1/(T s + 1)\nT = 10;      % time constant (s)\n% PI controller, the same gains in both loops\nKp = 5;      % proportional gain\nKi = 1;      % integral gain (1/s)\n% Actuator range (Saturation blocks), e.g. heater power from 0 to 1.5\numax = 1.5;  % upper limit, try 1.2, or 10 for no saturation\numin = 0;    % lower limit\n% Integrator limits (clamping) on the integral of the error, used only in the lower loop,\n% as in integral = constrain(integral, imin, imax)\nimax = 1.5;  % upper limit, umax/Ki, try 1 or 0.9\nimin = 0;    % lower limit",
       "name": "pi_anti_windup"
     }
   }

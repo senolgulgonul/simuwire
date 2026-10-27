@@ -96,18 +96,29 @@ pid('PID: PID ideal form',{Controller:'PID',Form:'Ideal',P:'2',I:'0.5',D:'0.1',N
  try{const r=simulate(m).scopes[sc.id];let err=0;for(let i=0;i<r.t.length;i++)err=Math.max(err,Math.abs(r.ys[0][i]-r.ys[1][i]));
   out.push(['ZOH + PI + ZOH = difference equation',err<=1e-6?'PASS':'FAIL',`max difference ${err.toExponential(2)}`]);}
  catch(e){out.push(['ZOH + PI + ZOH = difference equation','FAIL','error: '+e.message]);}}
-// 14d PID output limits and anti-windup. Error +1 until t = 3, then −1; I controller, I = 1, upper limit 1.
-//  none:             z = t keeps growing to 3 while u is stuck at 1, so u stays at 1 until z falls below 1 at t = 5
-//  clamping:         z stops at 1 at t = 1, so u leaves the limit as soon as the error turns: u = 1 − (t − 3)
-{const aw=(mode)=>{const m=mk(6,'','0.001');const c=add(m,'Step',{Time:'3',Before:'1',After:'-1'});
-   const g=add(m,'PID',{Controller:'I',I:'1',LimitOutput:'on',UpperSaturationLimit:'1',LowerSaturationLimit:'-inf',AntiWindupMode:mode});const s=add(m,'Scope');wire(m,c,g);wire(m,g,s);return[m,s];};
- {const[m,s]=aw('none');check('PID limit, no anti-windup',m,s,[[0.5,0.5],[2,1],[4,1],[4.9,1],[5.5,0.5],[6,0]],2e-3);}
- {const[m,s]=aw('clamping');check('PID anti-windup, clamping',m,s,[[0.5,0.5],[2,1],[3.5,0.5],[4,0],[5,-1]],2e-3);}
+// 14d PID integrator limit (clamping). Error +1 until t = 3, then −1, I controller with I = 1, so u = ∫e dt.
+//  Saturation after the PID, upper limit 1:  the integral keeps growing to 3 (windup) while the actuator is stuck
+//                                             at 1; the actuator leaves the limit only at t = 5
+//  integrator limited to 1:                   the integral stops at 1 at t = 1, so u = 1 − (t − 3) as soon as the error turns
+{const pi=(p,sat)=>{const m=mk(6,'','0.001');const c=add(m,'Step',{Time:'3',Before:'1',After:'-1'});
+   const g=add(m,'PID',Object.assign({Controller:'I',I:'1'},p));const s=add(m,'Scope');wire(m,c,g);
+   if(sat){const st=add(m,'Saturation',{UpperLimit:'1',LowerLimit:'-inf'});wire(m,g,st);wire(m,st,s);}else wire(m,g,s);return[m,s];};
+ {const[m,s]=pi({},true);check('PID with external saturation, windup',m,s,[[0.5,0.5],[2,1],[4,1],[4.9,1],[5.5,0.5],[6,0]],2e-3);}
+ {const[m,s]=pi({LimitIntegrator:'on',IntegratorUpperLimit:'1'});check('PID integrator limit (clamping)',m,s,[[0.5,0.5],[2,1],[3.5,0.5],[4,0],[5,-1]],2e-3);}
 }
-// Limits on a P controller: v = 10·e is cut to the limits
-{const m=mk(1);const c=add(m,'Constant',{Value:'1'});const g=add(m,'PID',{Controller:'P',P:'10',LimitOutput:'on',UpperSaturationLimit:'2',LowerSaturationLimit:'-2'});const s=add(m,'Scope');wire(m,c,g);wire(m,g,s);check('PID output limit',m,s,[[0,2],[1,2]]);}
-{const m=mk(1);const c=add(m,'Constant');const g=add(m,'PID',{LimitOutput:'on',UpperSaturationLimit:'-1',LowerSaturationLimit:'1'});const s=add(m,'Scope');wire(m,c,g);wire(m,g,s);
- try{simulate(m);out.push(['PID bad limits rejected','FAIL','no error']);}catch(e){out.push(['PID bad limits rejected',/lower limit/.test(e.message)?'PASS':'FAIL',e.message]);}}
+// PI, P = 1, I = 1, constant error 1: u = 1 + min(t, 0.5) with the integral limited to 0.5, and additionally cut to 1.2
+// by a Saturation block after the PID
+{const pi=(sat)=>{const m=mk(2,'','0.001');const c=add(m,'Constant',{Value:'1'});const g=add(m,'PID',{Controller:'PI',P:'1',I:'1',LimitIntegrator:'on',IntegratorUpperLimit:'0.5'});const s=add(m,'Scope');wire(m,c,g);
+   if(sat){const st=add(m,'Saturation',{UpperLimit:'1.2',LowerLimit:'-inf'});wire(m,g,st);wire(m,st,s);}else wire(m,g,s);return[m,s];};
+ {const[m,s]=pi(false);check('PID integrator limit only',m,s,[[0.25,1.25],[1,1.5],[2,1.5]],2e-3);}
+ {const[m,s]=pi(true);check('PID integrator limit and Saturation',m,s,[[0.1,1.1],[0.5,1.2],[2,1.2]],2e-3);}
+}
+// The integrator limits apply to ∫e dt itself, before the gain, as in integral = constrain(integral, 0, 0.2):
+// I = 5, e = 1, so ∫e = t stops at 0.2 (t = 0.2) and the integral term stops at 5·0.2 = 1
+{const m=mk(1,'','0.001');const c=add(m,'Constant',{Value:'1'});const g=add(m,'PID',{Controller:'I',I:'5',LimitIntegrator:'on',IntegratorUpperLimit:'0.2',IntegratorLowerLimit:'0'});const s=add(m,'Scope');wire(m,c,g);wire(m,g,s);
+ check('PID integrator limit on the integral, not on I times it',m,s,[[0.1,0.5],[0.5,1],[1,1]],2e-3);}
+{const m=mk(1);const c=add(m,'Constant');const g=add(m,'PID',{LimitIntegrator:'on',IntegratorUpperLimit:'-1',IntegratorLowerLimit:'1'});const s=add(m,'Scope');wire(m,c,g);wire(m,g,s);
+ try{simulate(m);out.push(['PID bad integrator limits rejected','FAIL','no error']);}catch(e){out.push(['PID bad integrator limits rejected',/lower limit/.test(e.message)?'PASS':'FAIL',e.message]);}}
 // 15 Switch
 for(const [cr,lab,f] of [['u2 >= Threshold','u2 ≥ threshold',t=>t>=2?1:-1],['u2 > Threshold','u2 > threshold',t=>t>2?1:-1],['u2 ~= 0','u2 ≠ 0',t=>t!==0?1:-1]]){
  const m=mk(4,'','0.5');const a=add(m,'Constant',{Value:'1'}),c=add(m,'Clock'),b=add(m,'Constant',{Value:'-1'});const sw=add(m,'Switch',{Criteria:cr,Threshold:'2'});const s=add(m,'Scope');

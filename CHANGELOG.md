@@ -2,6 +2,13 @@
 
 Versions follow MAJOR.MINOR.PATCH: a new feature raises MINOR (1.1 → 1.2), a bug fix raises PATCH (1.1 → 1.1.1).
 
+## v1.8 (2026-10-27)
+
+- PID anti-windup simplified to match typical microcontroller code. The PID now has **Limit integrator (clamping)**, which keeps the integral of the error ∫e dt within its limits, before the integral gain, like `integral = constrain(integral, imin, imax)`, so the numbers in the code can be entered unchanged. It works on its own and does not need an output limit.
+- The PID's Limit output option introduced in v1.7 is removed: the actuator limit is a Saturation block after the controller, like `output = constrain(output, umin, umax)`. When a Simulink model with a limited PID output is opened, a Saturation block with the same limits is added after the PID.
+- The PI anti-windup example now drives a Saturation block (the actuator) and clamps the integral; its notes show how to choose the integrator limits and that a too-narrow limit leaves a steady-state error.
+- Tests updated (58 in total), including one that checks the limits apply to ∫e dt and not to I·∫e dt.
+
 ## v1.7 (2026-10-26)
 
 - PID Controller: new **Limit output** option with upper and lower limits, and **clamping anti-windup**, which stops the integrator while the output is at a limit and integrating would push it further. The limit fields appear in the dialog only when Limit output is on. Limits and the anti-windup mode are read from Simulink files; back-calculation, which Simuwire does not have, is read as no anti-windup.

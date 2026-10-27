@@ -17,19 +17,22 @@ Every model here is also built into the app: click **Examples** in the toolbar a
 
 | File | What it shows |
 |---|---|
-| `pid/pi_anti_windup.json` | A PI controller (Kp = 5, Ki = 1) on the plant 1/(10s+1) with its output limited to 0…1.5, once without anti-windup and once with clamping. |
+| `pid/pi_anti_windup.json` | A PI controller (Kp = 5, Ki = 1) on the plant 1/(10s+1) driving an actuator limited to 0…1.5 (Saturation), once without anti-windup and once with the integral clamped to 0…1.5. |
 
-At the step the PI asks for more than the actuator can give, so its output sits at the upper limit. Without anti-windup the integrator keeps integrating the error during that time and winds up: the output stays at the limit for about 20 s, the plant overshoots by about 30 % and settles only after about 33 s. With clamping the integrator stops while the output is at the limit, so the controller leaves the limit as soon as the plant approaches the setpoint: no overshoot, settled after about 15 s.
+At the step the PI asks for more than the actuator can give, so the actuator sits at its upper limit. While the error keeps the same sign the integral keeps growing, without bound if nothing stops it: the actuator stays at the limit for about 20 s, the plant overshoots by about 30 % and settles only after about 33 s. With the integral clamped it cannot grow beyond its limit: the overshoot drops to about 6 % and the plant settles after about 21 s.
 
-In code, the simplest form of clamping is one condition around the integrator update (the block is slightly smarter: while limited it still integrates if that would bring the output back inside the limits):
+The diagram follows typical microcontroller code: the clamping is inside the PID block, the actuator limit is a separate Saturation block.
 
 ```
-u = Kp*e + I;
-if (u > umax) u = umax; else if (u < umin) u = umin;
-else I = I + Ki*Ts*e;        // integrate only while the output is not limited
+integral = integral + error*dt;
+integral = constrain(integral, imin, imax);   // PID block: Limit integrator (clamping)
+output = Kp*error + Ki*integral;
+output = constrain(output, umin, umax);       // Saturation block (actuator)
 ```
 
-What to look for: compare the two curves in the Control signal scope. Then try `umax = 1.2` (stronger saturation, much worse windup) and `umax = 10` (no saturation, the two loops give the same response).
+The integrator limits apply to the integral of the error itself, so the numbers in the code can be entered in the PID block unchanged. Choosing them: Ki·integral must still be able to supply the control signal the loop needs at steady state, but not much more. A common choice is `imax = umax/Ki`.
+
+What to look for: compare the two curves in the Control signal scope. Then change `imax` in Model variables. At steady state the integral term must supply the whole control signal, here 1 (plant gain 1, setpoint 1), so with Ki = 1 the integral must reach 1. With `imax = 1` the overshoot disappears; with `imax = 0.9` the integral cannot reach the value it needs and the output settles at 0.98 instead of 1, a steady-state error. With `umax = 10` the actuator never saturates and both loops give the same response.
 
 ## Sampled control
 
